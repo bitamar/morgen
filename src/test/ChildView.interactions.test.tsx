@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 vi.setSystemTime(mockDate);
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChildView from '../Components/ChildView';
 
@@ -29,7 +29,7 @@ describe('ChildView Interactions', () => {
     vi.setSystemTime(mockDate);
   });
 
-  it('calls onEditMode when settings button is clicked', async () => {
+  it('opens edit mode when settings button is clicked', async () => {
     render(
       <ChildView
         child={mockChild}
@@ -38,58 +38,24 @@ describe('ChildView Interactions', () => {
       />
     );
 
-    const settingsButton = screen.getByRole('button', { name: /settings/i });
-    await userEvent.click(settingsButton);
-
+    await userEvent.click(screen.getByRole('button', { name: /settings/i }));
     expect(mockOnEditMode).toHaveBeenCalled();
   });
 
-  it('calls onEditMode when Add Tasks button is clicked in empty state', async () => {
-    const childWithoutTasks = {
-      ...mockChild,
-      tasks: []
-    };
-
+  it('opens edit mode when Add Tasks button is clicked', async () => {
     render(
       <ChildView
-        child={childWithoutTasks}
+        child={{ ...mockChild, tasks: [] }}
         onUpdateChild={mockOnUpdateChild}
         onEditMode={mockOnEditMode}
       />
     );
 
-    const addTasksButton = screen.getByRole('button', { name: /Add Tasks/i });
-    await userEvent.click(addTasksButton);
-
+    await userEvent.click(screen.getByRole('button', { name: /Add Tasks/i }));
     expect(mockOnEditMode).toHaveBeenCalled();
   });
 
-  it('dismisses completion celebration when clicked', async () => {
-    const childWithCompletedTask = {
-      ...mockChild,
-      tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
-    };
-
-    render(
-      <ChildView
-        child={childWithCompletedTask}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
-    );
-
-    // Celebration should be visible initially
-    expect(screen.getByText(/All Done/i)).toBeInTheDocument();
-
-    // Click the celebration overlay to dismiss
-    const celebrationOverlay = screen.getByRole('presentation');
-    await userEvent.click(celebrationOverlay);
-
-    // Celebration should be dismissed
-    expect(screen.queryByText(/All Done/i)).not.toBeInTheDocument();
-  });
-
-  it('toggles task completion on click', async () => {
+  it('marks a task as done when clicked', async () => {
     render(
       <ChildView
         child={mockChild}
@@ -98,9 +64,7 @@ describe('ChildView Interactions', () => {
       />
     );
 
-    const task = screen.getByText('Brush teeth');
-    await userEvent.click(task);
-
+    await userEvent.click(screen.getByText('Brush teeth'));
     expect(mockOnUpdateChild).toHaveBeenCalledWith({
       ...mockChild,
       tasks: [
@@ -108,10 +72,24 @@ describe('ChildView Interactions', () => {
         { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
       ]
     });
+  });
 
-    // Click again to toggle back
-    await userEvent.click(task);
+  it('marks a completed task as not done when clicked', async () => {
+    render(
+      <ChildView
+        child={{
+          ...mockChild,
+          tasks: [
+            { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
+            { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
+          ]
+        }}
+        onUpdateChild={mockOnUpdateChild}
+        onEditMode={mockOnEditMode}
+      />
+    );
 
+    await userEvent.click(screen.getByText('Brush teeth'));
     expect(mockOnUpdateChild).toHaveBeenCalledWith({
       ...mockChild,
       tasks: [
@@ -119,5 +97,26 @@ describe('ChildView Interactions', () => {
         { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
       ]
     });
+  });
+
+  it('dismisses completion celebration when clicked', async () => {
+    render(
+      <ChildView
+        child={{
+          ...mockChild,
+          tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
+        }}
+        onUpdateChild={mockOnUpdateChild}
+        onEditMode={mockOnEditMode}
+      />
+    );
+
+    // Click the celebration overlay
+    await userEvent.click(screen.getByText(/All Done/i).closest('div[class*="fixed inset-0"]')!);
+    
+    // Wait for the celebration to be removed from the DOM
+    await waitFor(() => {
+      expect(screen.queryByText(/All Done/i)).not.toBeInTheDocument();
+    }, { timeout: 2000 });
   });
 }); 
