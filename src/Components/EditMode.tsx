@@ -1,20 +1,42 @@
-
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Card, Button, Text, Flex, Box } from '@radix-ui/themes';
 import {
     X, Plus, Trash2, GripVertical, Save, Clock,
     User, Smile, Heart, Star, Sun, Moon
 } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+
+interface Task {
+    id: string;
+    title: string;
+    emoji: string;
+    done: boolean;
+}
+
+interface Child {
+    id: string;
+    name: string;
+    avatar: string;
+    wakeUpTime: string;
+    busTime: string;
+    tasks: Task[];
+}
+
+interface EditModeProps {
+    child: Child;
+    onSave: (child: Child) => void;
+    onClose: () => void;
+}
+
+interface TaskPreset {
+    title: string;
+    emoji: string;
+}
 
 const AVATAR_OPTIONS = ['👦', '👧', '🧒', '👶', '🐱', '🐶', '🦄', '🌟', '🚀', '🎨'];
 
-const TASK_PRESETS = [
+const TASK_PRESETS: TaskPreset[] = [
     { title: 'Brush teeth', emoji: '🦷' },
     { title: 'Get dressed', emoji: '👕' },
     { title: 'Eat breakfast', emoji: '🥣' },
@@ -25,9 +47,9 @@ const TASK_PRESETS = [
     { title: 'Make bed', emoji: '🛏️' },
 ];
 
-export default function EditMode({ child, onSave, onClose }) {
-    const [editedChild, setEditedChild] = useState({
-        id: child.id, // Ensure ID is preserved
+export default function EditMode({ child, onSave, onClose }: EditModeProps) {
+    const [editedChild, setEditedChild] = useState<Child>({
+        id: child.id,
         name: child.name || '',
         avatar: child.avatar || '👦',
         wakeUpTime: child.wakeUpTime || '07:00',
@@ -38,7 +60,7 @@ export default function EditMode({ child, onSave, onClose }) {
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskEmoji, setNewTaskEmoji] = useState('✅');
 
-    const handleDragEnd = (result) => {
+    const handleDragEnd = (result: DropResult) => {
         if (!result.destination) return;
 
         const items = Array.from(editedChild.tasks);
@@ -48,13 +70,13 @@ export default function EditMode({ child, onSave, onClose }) {
         setEditedChild(prev => ({ ...prev, tasks: items }));
     };
 
-    const addTask = (preset = null) => {
+    const addTask = (preset?: TaskPreset) => {
         const title = preset?.title || newTaskTitle.trim();
         const emoji = preset?.emoji || newTaskEmoji;
 
         if (!title) return;
 
-        const newTask = {
+        const newTask: Task = {
             id: `task-${Date.now()}`,
             title,
             emoji,
@@ -72,14 +94,14 @@ export default function EditMode({ child, onSave, onClose }) {
         }
     };
 
-    const removeTask = (taskId) => {
+    const removeTask = (taskId: string) => {
         setEditedChild(prev => ({
             ...prev,
             tasks: prev.tasks.filter(task => task.id !== taskId)
         }));
     };
 
-    const updateTask = (taskId, field, value) => {
+    const updateTask = (taskId: string, field: keyof Task, value: string | boolean) => {
         setEditedChild(prev => ({
             ...prev,
             tasks: prev.tasks.map(task =>
@@ -107,8 +129,8 @@ export default function EditMode({ child, onSave, onClose }) {
             >
                 <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl sm:text-2xl font-bold">Edit {editedChild.name || 'Child'}'s Routine</h2>
-                        <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
+                        <Text size="6" weight="bold">Edit {editedChild.name || 'Child'}'s Routine</Text>
+                        <Button variant="ghost" size="3" onClick={onClose} className="text-white hover:bg-white/20">
                             <X className="w-5 h-5" />
                         </Button>
                     </div>
@@ -119,78 +141,73 @@ export default function EditMode({ child, onSave, onClose }) {
                         {/* Child Settings */}
                         <div className="space-y-6">
                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                                <Flex direction="column" gap="4" p="4">
+                                    <Text size="5" weight="bold" className="flex items-center gap-2">
                                         <User className="w-5 h-5" />
                                         Child Info
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="name">Name</Label>
-                                        <Input
-                                            id="name"
-                                            value={editedChild.name}
-                                            onChange={(e) => setEditedChild(prev => ({ ...prev, name: e.target.value }))}
-                                            placeholder="Enter child's name"
-                                            className="text-base sm:text-lg"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <Label>Avatar</Label>
-                                        <div className="grid grid-cols-5 gap-1 sm:gap-2 mt-2">
-                                            {AVATAR_OPTIONS.map((emoji) => (
-                                                <motion.button
-                                                    key={emoji}
-                                                    whileHover={{ scale: 1.1 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                    onClick={() => setEditedChild(prev => ({ ...prev, avatar: emoji }))}
-                                                    className={`
-                            w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 text-xl sm:text-2xl flex items-center justify-center transition-all
-                            ${editedChild.avatar === emoji
-                                                        ? 'border-blue-500 bg-blue-50'
-                                                        : 'border-gray-200 hover:border-gray-300'
-                                                    }
-                          `}
-                                                >
-                                                    {emoji}
-                                                </motion.button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                                        <div>
-                                            <Label htmlFor="wakeup">Wake-up Time</Label>
-                                            <Input
-                                                id="wakeup"
-                                                type="time"
-                                                value={editedChild.wakeUpTime}
-                                                onChange={(e) => setEditedChild(prev => ({ ...prev, wakeUpTime: e.target.value }))}
-                                                className="text-sm sm:text-base"
+                                    </Text>
+                                    <Flex direction="column" gap="4">
+                                        <Box>
+                                            <Text as="label" size="2" weight="medium" mb="2">Name</Text>
+                                            <input
+                                                value={editedChild.name}
+                                                onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedChild(prev => ({ ...prev, name: e.target.value }))}
+                                                placeholder="Enter child's name"
+                                                className="w-full px-3 py-2 rounded-md border border-gray-300 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="bus">Bus Time</Label>
-                                            <Input
-                                                id="bus"
-                                                type="time"
-                                                value={editedChild.busTime}
-                                                onChange={(e) => setEditedChild(prev => ({ ...prev, busTime: e.target.value }))}
-                                                className="text-sm sm:text-base"
-                                            />
-                                        </div>
-                                    </div>
-                                </CardContent>
+                                        </Box>
+
+                                        <Box>
+                                            <Text as="label" size="2" weight="medium" mb="2">Avatar</Text>
+                                            <div className="grid grid-cols-5 gap-1 sm:gap-2 mt-2">
+                                                {AVATAR_OPTIONS.map((emoji) => (
+                                                    <motion.button
+                                                        key={emoji}
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        onClick={() => setEditedChild(prev => ({ ...prev, avatar: emoji }))}
+                                                        className={`
+                                                            w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 text-xl sm:text-2xl flex items-center justify-center transition-all
+                                                            ${editedChild.avatar === emoji
+                                                                ? 'border-blue-500 bg-blue-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
+                                                            }
+                                                        `}
+                                                    >
+                                                        {emoji}
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </Box>
+
+                                        <Flex gap="4">
+                                            <Box style={{ flex: 1 }}>
+                                                <Text as="label" size="2" weight="medium" mb="2">Wake-up Time</Text>
+                                                <input
+                                                    type="time"
+                                                    value={editedChild.wakeUpTime}
+                                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedChild(prev => ({ ...prev, wakeUpTime: e.target.value }))}
+                                                    className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </Box>
+                                            <Box style={{ flex: 1 }}>
+                                                <Text as="label" size="2" weight="medium" mb="2">Bus Time</Text>
+                                                <input
+                                                    type="time"
+                                                    value={editedChild.busTime}
+                                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEditedChild(prev => ({ ...prev, busTime: e.target.value }))}
+                                                    className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </Box>
+                                        </Flex>
+                                    </Flex>
+                                </Flex>
                             </Card>
 
                             {/* Quick Add Presets */}
                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-base sm:text-lg">Quick Add Tasks</CardTitle>
-                                </CardHeader>
-                                <CardContent>
+                                <Flex direction="column" gap="4" p="4">
+                                    <Text size="5" weight="bold">Quick Add Tasks</Text>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         {TASK_PRESETS.map((preset) => (
                                             <motion.button
@@ -205,47 +222,109 @@ export default function EditMode({ child, onSave, onClose }) {
                                             </motion.button>
                                         ))}
                                     </div>
-                                </CardContent>
+                                </Flex>
                             </Card>
                         </div>
 
                         {/* Tasks */}
                         <div>
                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                                <Flex direction="column" gap="4" p="4">
+                                    <Text size="5" weight="bold" className="flex items-center gap-2">
                                         <Star className="w-5 h-5" />
                                         Morning Tasks ({editedChild.tasks.length})
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {/* Add New Task */}
-                                    <div className="space-y-3 p-3 sm:p-4 border border-dashed border-gray-300 rounded-lg">
-                                        <div className="grid grid-cols-4 gap-1 sm:gap-2 items-center">
-                                            <Input
-                                                value={newTaskEmoji}
-                                                onChange={(e) => setNewTaskEmoji(e.target.value)}
-                                                placeholder="📝"
-                                                className="text-center text-sm sm:text-base"
-                                                maxLength={2}
-                                            />
-                                            <Input
-                                                value={newTaskTitle}
-                                                onChange={(e) => setNewTaskTitle(e.target.value)}
-                                                placeholder="New task..."
-                                                className="col-span-2 text-sm sm:text-base"
-                                                onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                                            />
-                                            <Button onClick={() => addTask()} size="sm" className="p-2 sm:p-2.5">
-                                                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
+                                    </Text>
+                                    <Flex direction="column" gap="4">
+                                        {/* Add New Task */}
+                                        <Box className="space-y-3 p-3 sm:p-4 border border-dashed border-gray-300 rounded-lg">
+                                            <Flex gap="2" align="center">
+                                                <input
+                                                    value={newTaskEmoji}
+                                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNewTaskEmoji(e.target.value)}
+                                                    placeholder="📝"
+                                                    className="w-16 px-3 py-2 rounded-md border border-gray-300 text-center text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    maxLength={2}
+                                                />
+                                                <input
+                                                    value={newTaskTitle}
+                                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNewTaskTitle(e.target.value)}
+                                                    placeholder="New task..."
+                                                    className="flex-1 px-3 py-2 rounded-md border border-gray-300 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addTask()}
+                                                />
+                                                <Button onClick={() => addTask()} size="2">
+                                                    <Plus className="w-4 h-4" />
+                                                </Button>
+                                            </Flex>
+                                        </Box>
 
-                                    {/* Task List */}
-                                    <DragDropContext onDragEnd={handleDragEnd}>
-                                        <Droppable droppableId="tasks">
-                                            {(provided) => (
-                                                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2 max-h-64 sm:max-h-80 overflow-y-auto pr-1">
-                                                    {editedChild.tasks.map((task, index) => (
-                                                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                                        {/* Task List */}
+                                        <DragDropContext onDragEnd={handleDragEnd}>
+                                            <Droppable droppableId="tasks">
+                                                {(provided) => (
+                                                    <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2 max-h-64 sm:max-h-80 overflow-y-auto pr-1">
+                                                        {editedChild.tasks.map((task, index) => (
+                                                            <Draggable key={task.id} draggableId={task.id} index={index}>
+                                                                {(provided, snapshot) => (
+                                                                    <div
+                                                                        ref={provided.innerRef}
+                                                                        {...provided.draggableProps}
+                                                                        className={`
+                                                                            flex items-center gap-2 p-2 sm:p-3 rounded-lg border
+                                                                            ${snapshot.isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}
+                                                                            transition-all
+                                                                        `}
+                                                                    >
+                                                                        <div {...provided.dragHandleProps} className="cursor-grab">
+                                                                            <GripVertical className="w-4 h-4 text-gray-400" />
+                                                                        </div>
+                                                                        <input
+                                                                            value={task.title}
+                                                                            onChange={(e: ChangeEvent<HTMLInputElement>) => updateTask(task.id, 'title', e.target.value)}
+                                                                            className="flex-1 px-3 py-2 rounded-md border border-gray-300 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                        />
+                                                                        <input
+                                                                            value={task.emoji}
+                                                                            onChange={(e: ChangeEvent<HTMLInputElement>) => updateTask(task.id, 'emoji', e.target.value)}
+                                                                            className="w-16 px-3 py-2 rounded-md border border-gray-300 text-center text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            maxLength={2}
+                                                                        />
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            color="red"
+                                                                            size="2"
+                                                                            onClick={() => removeTask(task.id)}
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                )}
+                                                            </Draggable>
+                                                        ))}
+                                                        {provided.placeholder}
+                                                    </div>
+                                                )}
+                                            </Droppable>
+                                        </DragDropContext>
+                                    </Flex>
+                                </Flex>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 sm:p-6 border-t bg-gray-50">
+                    <Flex justify="end" gap="3">
+                        <Button variant="soft" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSave}>
+                            Save Changes
+                        </Button>
+                    </Flex>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+}
+

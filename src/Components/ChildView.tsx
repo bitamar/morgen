@@ -1,17 +1,36 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, Button, Text, Flex, Box, Badge } from '@radix-ui/themes';
 import { Clock, Settings, CheckCircle2, Target } from 'lucide-react';
 import TaskCard from './TaskCard';
 
+interface Task {
+    id: string;
+    title: string;
+    emoji: string;
+    done: boolean;
+}
+
+interface Child {
+    id: string;
+    name: string;
+    avatar: string;
+    wakeUpTime: string;
+    busTime: string;
+    tasks: Task[];
+}
+
+interface ChildViewProps {
+    child: Child;
+    onUpdateChild: (child: Child) => void;
+    onEditMode: () => void;
+}
+
 export default function ChildView({
-                                      child,
-                                      onUpdateChild,
-                                      onEditMode,
-                                  }) {
+    child,
+    onUpdateChild,
+    onEditMode,
+}: ChildViewProps) {
     const [completedCount, setCompletedCount] = useState(0);
     const [showCompletionCelebration, setShowCompletionCelebration] = useState(false);
     const [busCountdown, setBusCountdown] = useState('');
@@ -47,7 +66,7 @@ export default function ChildView({
         }
 
         const [hours, minutes] = child.busTime.split(':').map(Number);
-        const busTimeToday = new Date(pageCurrentTime); // Use pageCurrentTime for consistency
+        const busTimeToday = new Date(pageCurrentTime);
         busTimeToday.setHours(hours, minutes, 0, 0);
 
         const diff = busTimeToday.getTime() - pageCurrentTime.getTime();
@@ -55,7 +74,7 @@ export default function ChildView({
         // Check if bus time is more than 30 minutes in the past
         if (diff <= -30 * 60 * 1000) {
             setBusCountdown("Bus has left");
-        } else if (diff <= 0) { // Check if bus time is current or just past (within 30 mins)
+        } else if (diff <= 0) {
             setBusCountdown("Bus time!");
         } else {
             const totalSeconds = Math.floor(diff / 1000);
@@ -73,8 +92,7 @@ export default function ChildView({
         }
     }, [child.busTime, pageCurrentTime]);
 
-
-    const handleTaskToggle = (taskId) => {
+    const handleTaskToggle = (taskId: string) => {
         const updatedTasks = child.tasks?.map(task =>
             task.id === taskId ? { ...task, done: !task.done } : task
         ) || [];
@@ -94,7 +112,7 @@ export default function ChildView({
     });
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 pt-20"> {/* Added pt-20 for top nav */}
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 pt-20">
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <motion.div
@@ -103,7 +121,7 @@ export default function ChildView({
                     className="mb-8"
                 >
                     <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                        <CardContent className="p-6">
+                        <div className="p-6">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <motion.div
@@ -113,20 +131,21 @@ export default function ChildView({
                                         {child.avatar || child.name?.[0]?.toUpperCase() || '?'}
                                     </motion.div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-gray-800">
+                                        <Text size="6" weight="bold" className="text-gray-800">
                                             {child.name || 'Kiddo'}'s Morning! 🌅
-                                        </h1>
+                                        </Text>
                                         <div className="flex items-center gap-2 flex-wrap mt-2">
-                                            <Badge variant="outline" className="flex items-center gap-1 text-sm">
+                                            <Badge variant="outline" className="flex items-center gap-1">
                                                 <Clock className="w-3 h-3" />
                                                 {displayTime}
                                             </Badge>
                                             {child.busTime && (
                                                 <Badge
                                                     variant="outline"
-                                                    className={`flex items-center gap-1 text-sm ${
-                                                        // Apply red styling if bus time is now or in the past
-                                                        busCountdown.includes("Bus time!") || busCountdown.includes("Bus has left") ? "bg-red-100 text-red-700 border-red-300" : ""
+                                                    className={`flex items-center gap-1 ${
+                                                        busCountdown.includes("Bus time!") || busCountdown.includes("Bus has left") 
+                                                            ? "bg-red-100 text-red-700 border-red-300" 
+                                                            : ""
                                                     }`}
                                                 >
                                                     <Target className="w-3 h-3" />
@@ -138,8 +157,7 @@ export default function ChildView({
                                 </div>
 
                                 <Button
-                                    variant="outline"
-                                    size="icon"
+                                    variant="ghost"
                                     onClick={onEditMode}
                                     className="text-gray-600 hover:text-gray-800"
                                 >
@@ -151,12 +169,12 @@ export default function ChildView({
                             {totalTasks > 0 && (
                                 <div className="mt-4">
                                     <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">
-                      Progress: {completedTasks}/{totalTasks} tasks
-                    </span>
-                                        <span className="text-sm font-bold text-blue-600">
-                      {Math.round(progressPercentage)}%
-                    </span>
+                                        <Text size="2" className="text-gray-600">
+                                            Progress: {completedTasks}/{totalTasks} tasks
+                                        </Text>
+                                        <Text size="2" weight="bold" className="text-blue-600">
+                                            {Math.round(progressPercentage)}%
+                                        </Text>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-3">
                                         <motion.div
@@ -168,7 +186,7 @@ export default function ChildView({
                                     </div>
                                 </div>
                             )}
-                        </CardContent>
+                        </div>
                     </Card>
                 </motion.div>
 
@@ -198,12 +216,12 @@ export default function ChildView({
                             className="text-center py-12"
                         >
                             <div className="text-6xl mb-4">📝</div>
-                            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                            <Text size="5" weight="bold" className="text-gray-600 mb-2">
                                 No tasks yet!
-                            </h3>
-                            <p className="text-gray-500">
+                            </Text>
+                            <Text size="2" className="text-gray-500">
                                 Tap the <Settings className="inline w-4 h-4" /> icon to add some morning tasks.
-                            </p>
+                            </Text>
                             <Button onClick={onEditMode} className="mt-4">Add Tasks</Button>
                         </motion.div>
                     )}
@@ -228,12 +246,12 @@ export default function ChildView({
                                 className="bg-white rounded-3xl p-8 text-center shadow-2xl max-w-sm mx-4"
                             >
                                 <div className="text-8xl mb-4">🎉</div>
-                                <h2 className="text-3xl font-bold text-green-600 mb-2">
+                                <Text size="6" weight="bold" className="text-green-600 mb-2">
                                     All Done, {child.name}!
-                                </h2>
-                                <p className="text-gray-600 text-lg">
+                                </Text>
+                                <Text size="3" className="text-gray-600">
                                     Fantastic work! You're ready for an amazing day! 🚌
-                                </p>
+                                </Text>
                                 <motion.div
                                     animate={{ y: [0, -10, 0] }}
                                     transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}

@@ -1,14 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Settings, Users } from 'lucide-react';
-import { AlarmProvider } from '../components/AlarmSystem';
-import AlarmOverlay from '../components/AlarmOverlay';
-import ChildView from '../components/ChildView';
-import EditMode from '../components/EditMode';
-import ChildManager from '../components/ChildManager';
+import { Button, Card, Flex, Text } from '@radix-ui/themes';
+import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { AlarmProvider } from './Components/AlarmSystem';
+import AlarmOverlay from './Components/AlarmOverlay';
+import ChildView from './Components/ChildView';
+import EditMode from './Components/EditMode';
+import ChildManager from './Components/ChildManager';
 
 // Local storage key
 const STORAGE_KEY = 'morningRoutine.v1';

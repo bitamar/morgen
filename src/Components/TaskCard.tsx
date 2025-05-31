@@ -1,7 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, Text, Flex, Box } from '@radix-ui/themes';
 import { Check, Star } from 'lucide-react';
+
+interface Task {
+    id: string;
+    title: string;
+    emoji: string;
+    done: boolean;
+}
+
+interface TaskCardProps {
+    task: Task;
+    onToggle: (id: string) => void;
+    disabled?: boolean;
+}
 
 const celebrationSounds = [
     '🎉', '✨', '🌟', '🎊', '💫', '🎈'
@@ -11,7 +24,7 @@ const celebrationAnimations = [
     'confetti', 'bounce', 'sparkle', 'flip', 'glow', 'pulse'
 ];
 
-export default function TaskCard({ task, onToggle, disabled = false }) {
+export default function TaskCard({ task, onToggle, disabled = false }: TaskCardProps) {
     const [isAnimating, setIsAnimating] = useState(false);
     const [celebrationEmoji, setCelebrationEmoji] = useState('');
 
@@ -25,7 +38,8 @@ export default function TaskCard({ task, onToggle, disabled = false }) {
             setIsAnimating(true);
 
             // Play a simple beep sound
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const AudioContext = (window.AudioContext || (window as any).webkitAudioContext) as typeof window.AudioContext;
+            const audioContext = new AudioContext();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
 
@@ -61,13 +75,13 @@ export default function TaskCard({ task, onToggle, disabled = false }) {
             >
                 <Card
                     className={`
-            cursor-pointer transition-all duration-300 border-2 min-h-[120px] relative overflow-hidden
-            ${task.done
-                        ? 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-300 shadow-lg'
-                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-300 hover:shadow-md'
-                    }
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
+                        cursor-pointer transition-all duration-300 border-2 min-h-[120px] relative overflow-hidden
+                        ${task.done
+                            ? 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-300 shadow-lg'
+                            : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-300 hover:shadow-md'
+                        }
+                        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
                     onClick={handleToggle}
                 >
                     {/* Background Pattern */}
@@ -77,26 +91,26 @@ export default function TaskCard({ task, onToggle, disabled = false }) {
                         }} />
                     </div>
 
-                    <CardContent className="p-6 flex items-center justify-between relative z-10">
-                        <div className="flex items-center gap-4">
+                    <Flex p="6" align="center" justify="between" className="relative z-10">
+                        <Flex gap="4" align="center">
                             {task.emoji && (
-                                <div className="text-4xl">
+                                <Text size="6" className="text-4xl">
                                     {task.emoji}
-                                </div>
+                                </Text>
                             )}
-                            <div>
-                                <h3 className={`text-xl font-semibold transition-all duration-300 ${
+                            <Box>
+                                <Text size="5" weight="bold" className={`transition-all duration-300 ${
                                     task.done ? 'text-green-800 line-through' : 'text-gray-800'
                                 }`}>
                                     {task.title}
-                                </h3>
+                                </Text>
                                 {task.done && (
-                                    <p className="text-green-600 text-sm font-medium mt-1">
+                                    <Text size="2" color="green" className="mt-1">
                                         Great job! ✨
-                                    </p>
+                                    </Text>
                                 )}
-                            </div>
-                        </div>
+                            </Box>
+                        </Flex>
 
                         <motion.div
                             animate={{
@@ -105,12 +119,12 @@ export default function TaskCard({ task, onToggle, disabled = false }) {
                             }}
                             transition={{ duration: 0.5 }}
                             className={`
-                w-12 h-12 rounded-full border-3 flex items-center justify-center transition-all duration-300
-                ${task.done
-                                ? 'bg-green-500 border-green-600 text-white'
-                                : 'bg-white border-blue-300 text-blue-500'
-                            }
-              `}
+                                w-12 h-12 rounded-full border-3 flex items-center justify-center transition-all duration-300
+                                ${task.done
+                                    ? 'bg-green-500 border-green-600 text-white'
+                                    : 'bg-white border-blue-300 text-blue-500'
+                                }
+                            `}
                         >
                             {task.done ? (
                                 <Check className="w-6 h-6" />
@@ -118,7 +132,7 @@ export default function TaskCard({ task, onToggle, disabled = false }) {
                                 <div className="w-4 h-4 rounded-full border-2 border-current" />
                             )}
                         </motion.div>
-                    </CardContent>
+                    </Flex>
                 </Card>
             </motion.div>
 

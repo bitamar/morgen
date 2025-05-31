@@ -1,16 +1,49 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { AlarmClock, Bus, Clock, AlertTriangle } from 'lucide-react'; // Added AlertTriangle
+import { Button, Card, Text } from '@radix-ui/themes';
+import { AlarmClock, Bus, Clock, AlertTriangle } from 'lucide-react';
 import { useAlarm } from './AlarmSystem';
 
+interface Child {
+    id: string;
+    name: string;
+    avatar: string;
+    wakeUpTime: string;
+    busTime: string;
+    tasks: Array<{
+        id: string;
+        title: string;
+        emoji: string;
+        done: boolean;
+    }>;
+}
+
+interface Alarm {
+    type: 'wakeup' | 'warning' | 'departure';
+    child: Child;
+}
+
+interface AlarmSystem {
+    currentAlarm: Alarm | null;
+    dismissAlarm: () => void;
+}
+
+interface AlarmContent {
+    icon: React.ElementType;
+    title: string;
+    message: string;
+    bgColor: string;
+    buttonClass: string;
+    action: string;
+    isUrgent?: boolean;
+}
+
 export default function AlarmOverlay() {
-    const { currentAlarm, dismissAlarm } = useAlarm();
+    const { currentAlarm, dismissAlarm } = useAlarm() as AlarmSystem;
 
     if (!currentAlarm) return null;
 
-    const getAlarmContent = () => {
+    const getAlarmContent = (): AlarmContent => {
         switch (currentAlarm.type) {
             case 'wakeup':
                 return {
@@ -36,9 +69,9 @@ export default function AlarmOverlay() {
                     title: 'BUS TIME!',
                     message: `Hurry, ${currentAlarm.child.name}! The bus is here! 🏃💨`,
                     bgColor: 'from-red-500 to-pink-600',
-                    buttonClass: 'bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-700 hover:to-pink-800 animate-pulse', // Added pulse animation to button
+                    buttonClass: 'bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-700 hover:to-pink-800 animate-pulse',
                     action: 'I\'M GOING!',
-                    isUrgent: true // Flag for flashing background
+                    isUrgent: true
                 };
             default:
                 return {
@@ -62,14 +95,14 @@ export default function AlarmOverlay() {
             className={`fixed inset-0 flex items-center justify-center z-[100] ${
                 alarmContent.isUrgent ? 'alarm-pulse-bg' : 'bg-black/80'
             }`}
-            onClick={dismissAlarm} // Allow dismissing by clicking background for non-urgent
+            onClick={dismissAlarm}
         >
             <motion.div
                 initial={{ scale: 0.8, y: 50 }}
                 animate={{
                     scale: 1,
                     y: 0,
-                    rotate: alarmContent.isUrgent ? [0, 0.5, -0.5, 0.5, -0.5, 0] : 0 // Gentle shake for urgent
+                    rotate: alarmContent.isUrgent ? [0, 0.5, -0.5, 0.5, -0.5, 0] : 0
                 }}
                 transition={{
                     type: "spring",
@@ -77,14 +110,14 @@ export default function AlarmOverlay() {
                     rotate: { repeat: Infinity, duration: 0.3, ease: "easeInOut" }
                 }}
                 className="max-w-md mx-4 w-full"
-                onClick={(e) => e.stopPropagation()} // Prevent click through to background dismiss
+                onClick={(e) => e.stopPropagation()}
             >
                 <Card className="overflow-hidden shadow-2xl border-0">
                     <div className={`p-8 bg-gradient-to-br ${alarmContent.bgColor} text-white text-center`}>
                         <motion.div
                             animate={{
                                 scale: [1, 1.2, 1],
-                                rotate: alarmContent.isUrgent ? [0,5,-5,0] : [0, 2, -2, 0] // More subtle rotate for non-urgent
+                                rotate: alarmContent.isUrgent ? [0,5,-5,0] : [0, 2, -2, 0]
                             }}
                             transition={{ repeat: Infinity, duration: alarmContent.isUrgent ? 0.7 : 1.5, ease: "easeInOut" }}
                             className="mb-4"
@@ -92,41 +125,41 @@ export default function AlarmOverlay() {
                             <IconComponent className="w-16 h-16 mx-auto" />
                         </motion.div>
 
-                        <h1 className="text-3xl font-bold mb-2">{alarmContent.title}</h1>
-                        <p className="text-xl text-white/90">{alarmContent.message}</p>
+                        <Text size="6" weight="bold" className="mb-2">{alarmContent.title}</Text>
+                        <Text size="4" className="text-white/90">{alarmContent.message}</Text>
                     </div>
 
-                    <CardContent className="p-6 text-center bg-white">
+                    <div className="p-6 text-center bg-white">
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
                             <Button
                                 onClick={dismissAlarm}
-                                size="lg"
+                                size="3"
                                 className={`w-full text-lg py-6 text-white ${alarmContent.buttonClass}`}
                             >
                                 {alarmContent.action}
                             </Button>
                         </motion.div>
 
-                        <p className="text-sm text-gray-500 mt-4">
+                        <Text size="1" className="text-gray-500 mt-4">
                             Tap the button to dismiss this alert.
-                        </p>
-                    </CardContent>
+                        </Text>
+                    </div>
                 </Card>
             </motion.div>
 
             {alarmContent.isUrgent && (
-                <style jsx global>{`
-          @keyframes alarmPulseBackground {
-            0%, 100% { background-color: rgba(150, 0, 0, 0.7); }
-            50% { background-color: rgba(220, 38, 38, 0.9); }
-          }
-          .alarm-pulse-bg {
-            animation: alarmPulseBackground 0.7s infinite alternate;
-          }
-        `}</style>
+                <style>{`
+                    @keyframes alarmPulseBackground {
+                        0%, 100% { background-color: rgba(150, 0, 0, 0.7); }
+                        50% { background-color: rgba(220, 38, 38, 0.9); }
+                    }
+                    .alarm-pulse-bg {
+                        animation: alarmPulseBackground 0.7s infinite alternate;
+                    }
+                `}</style>
             )}
         </motion.div>
     );
