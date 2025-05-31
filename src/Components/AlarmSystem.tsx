@@ -1,6 +1,30 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-const AlarmContext = createContext();
+export interface Task {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
+export interface Child {
+  id: string;
+  name: string;
+  wakeUpTime?: string;
+  busTime?: string;
+  tasks?: Task[];
+}
+
+interface Alarm {
+  type: string;
+  child: Child;
+}
+
+interface AlarmProviderProps {
+  children: React.ReactNode;
+  childData?: Child[];
+}
+
+const AlarmContext = createContext<any>(null);
 
 export const useAlarm = () => {
     const context = useContext(AlarmContext);
@@ -10,10 +34,10 @@ export const useAlarm = () => {
     return context;
 };
 
-export const AlarmProvider = ({ children, childData = [] }) => {
-    const [currentAlarm, setCurrentAlarm] = useState(null);
-    const [audioContext, setAudioContext] = useState(null);
-    const [alarmAudio, setAlarmAudio] = useState(null);
+export const AlarmProvider = ({ children, childData = [] }: AlarmProviderProps) => {
+    const [currentAlarm, setCurrentAlarm] = useState<Alarm | null>(null);
+    const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+    const [alarmAudio, setAlarmAudio] = useState<HTMLAudioElement | null>(null);
 
     const initAudio = useCallback(() => {
         if (audioContext) return; // Initialize only once
@@ -28,7 +52,6 @@ export const AlarmProvider = ({ children, childData = [] }) => {
             audio.loop = true;
             audio.volume = 0.8; // Set a default volume
             setAlarmAudio(audio);
-            console.log("Alarm audio initialized");
         } catch (error) {
             console.error("Error initializing audio:", error);
         }

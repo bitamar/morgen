@@ -1,12 +1,11 @@
-import '@testing-library/jest-dom'
-import { expect, afterEach } from 'vitest'
-import { cleanup } from '@testing-library/react'
-import matchers from '@testing-library/jest-dom/matchers'
+import '@testing-library/jest-dom';
+import { afterEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
-// Extend Vitest's expect method with methods from react-testing-library
-expect.extend(matchers)
+// Configure test timeout
+vi.setConfig({ testTimeout: 1000 });
 
-// Cleanup after each test case (e.g. clearing jsdom)
+// Cleanup after each test case
 afterEach(() => {
-  cleanup()
-}) 
+  cleanup();
+}); 
