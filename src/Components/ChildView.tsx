@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, Button, Text, Flex, Box, Badge } from '@radix-ui/themes';
+import { Card, Button, Text, Badge } from '@radix-ui/themes';
 import { Clock, Settings, CheckCircle2, Target } from 'lucide-react';
 import TaskCard from './TaskCard';
 
@@ -38,9 +38,15 @@ export default function ChildView({
 
     // Effect to update current time every second
     useEffect(() => {
-        const timerId = setInterval(() => {
+        const updateTime = () => {
             setPageCurrentTime(new Date());
-        }, 1000);
+        };
+        
+        // Update immediately
+        updateTime();
+        
+        // Then update every second
+        const timerId = setInterval(updateTime, 1000);
         return () => clearInterval(timerId);
     }, []);
 
@@ -160,6 +166,7 @@ export default function ChildView({
                                     variant="ghost"
                                     onClick={onEditMode}
                                     className="text-gray-600 hover:text-gray-800"
+                                    aria-label="Settings"
                                 >
                                     <Settings className="w-5 h-5" />
                                 </Button>
