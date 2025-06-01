@@ -1,11 +1,9 @@
-// Mock the current time before imports
-const mockDate = new Date('2024-03-20T07:00:00');
 import { vi } from 'vitest';
-vi.setSystemTime(mockDate);
-
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import ChildView from '../Components/ChildView';
+
+const mockDate = new Date('2024-03-20T07:00:00');
 
 describe('ChildView Time', () => {
   const mockChild = {
@@ -22,11 +20,13 @@ describe('ChildView Time', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     vi.setSystemTime(mockDate);
   });
 
   afterEach(() => {
     vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   it('displays current time in correct format', () => {
@@ -34,7 +34,7 @@ describe('ChildView Time', () => {
       <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
-    expect(screen.getByText('7:00 AM')).toBeInTheDocument();
+    expect(screen.getByText('07:00 AM')).toBeInTheDocument();
   });
 
   it('updates time display every second', async () => {
@@ -47,7 +47,7 @@ describe('ChildView Time', () => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(screen.getByText('7:00 AM')).toBeInTheDocument();
+    expect(screen.getByText('07:00 AM')).toBeInTheDocument();
   });
 
   it('cleans up timer on unmount', () => {

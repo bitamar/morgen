@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Text, Flex, Box } from '@radix-ui/themes';
-import { Check, Star } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -18,7 +18,7 @@ interface TaskCardProps {
 
 const celebrationSounds = ['🎉', '✨', '🌟', '🎊', '💫', '🎈'];
 
-const celebrationAnimations = ['confetti', 'bounce', 'sparkle', 'flip', 'glow', 'pulse'];
+// const celebrationAnimations = ['confetti', 'bounce', 'sparkle', 'flip', 'glow', 'pulse'];
 
 export default function TaskCard({ task, onToggle, disabled = false }: TaskCardProps) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -71,6 +71,7 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
         className="relative"
       >
         <Card
+          data-testid="task-card"
           className={`
                         cursor-pointer transition-all duration-300 border-2 min-h-[120px] relative overflow-hidden
                         ${

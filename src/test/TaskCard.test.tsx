@@ -27,10 +27,20 @@ Object.defineProperty(window, 'Audio', {
   value: vi.fn(() => ({ play: vi.fn(), pause: vi.fn() })),
 });
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TaskCard from '../Components/TaskCard';
+
+// Silence Framer Motion's enter/exit animations by mocking both `motion.div` and `AnimatePresence` so they render instantly and remove instantly.
+vi.mock('framer-motion', () => {
+  return {
+    motion: {
+      div: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    },
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
 
 describe('TaskCard', () => {
   const mockTask = {
@@ -44,6 +54,11 @@ describe('TaskCard', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders task information correctly', () => {
@@ -54,10 +69,13 @@ describe('TaskCard', () => {
   });
 
   it('calls onToggle when clicked', async () => {
+    vi.useRealTimers();
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
-    const card = screen.getByText('Brush teeth').closest('div[role="button"]');
-    await userEvent.click(card!);
+    const card = screen.getByTestId('task-card');
+    await act(async () => {
+      await userEvent.click(card);
+    });
 
     expect(mockOnToggle).toHaveBeenCalledWith('task1');
   });
@@ -71,45 +89,66 @@ describe('TaskCard', () => {
   });
 
   it('does not trigger celebration when marking task as incomplete', async () => {
+    vi.useRealTimers();
     const completedTask = { ...mockTask, done: true };
-    render(<TaskCard task={completedTask} onToggle={mockOnToggle} />);
+    const { rerender } = render(<TaskCard task={completedTask} onToggle={mockOnToggle} />);
 
-    const card = screen.getByText('Brush teeth').closest('div[role="button"]');
-    await userEvent.click(card!);
+    const card = screen.getByTestId('task-card');
+    await act(async () => {
+      await userEvent.click(card);
+    });
 
     expect(mockOnToggle).toHaveBeenCalledWith('task1');
+
+    // Simulate parent updating the task to incomplete
+    rerender(<TaskCard task={{ ...mockTask, done: false }} onToggle={mockOnToggle} />);
+
     // No celebration emoji should be shown
     expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/)).not.toBeInTheDocument();
+    // "Great job!" text should be removed
+    expect(screen.queryByText('Great job! ✨')).not.toBeInTheDocument();
   });
 
-  it('triggers celebration when marking task as complete', async () => {
+  it('triggers celebration when marking task as complete', () => {
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
-    const card = screen.getByText('Brush teeth').closest('div[role="button"]');
-    await userEvent.click(card!);
+    const card = screen.getByTestId('task-card');
+    fireEvent.click(card);
 
-    // Celebration emoji should be shown
+    // Celebration emoji should be shown (any one from the array)
     expect(screen.getByText(/[🎉✨🌟🎊💫🎈]/)).toBeInTheDocument();
+
+    // Advance timers to check cleanup
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/)).toBeNull();
   });
 
   it('plays sound when marking task as complete', async () => {
+    vi.useRealTimers();
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
-    const card = screen.getByText('Brush teeth').closest('div[role="button"]');
-    await userEvent.click(card!);
+    const card = screen.getByTestId('task-card');
+    await act(async () => {
+      await userEvent.click(card);
+    });
 
     expect(mockAudioContext.createOscillator).toHaveBeenCalled();
     expect(mockAudioContext.createGain).toHaveBeenCalled();
   });
 
   it('is disabled when disabled prop is true', async () => {
+    vi.useRealTimers();
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} disabled={true} />);
 
-    const card = screen.getByText('Brush teeth').closest('div[role="button"]');
+    const card = screen.getByTestId('task-card');
     expect(card).toHaveClass('opacity-50');
     expect(card).toHaveClass('cursor-not-allowed');
 
-    await userEvent.click(card!);
+    await act(async () => {
+      await userEvent.click(card);
+    });
     expect(mockOnToggle).not.toHaveBeenCalled();
   });
 
@@ -117,7 +156,7 @@ describe('TaskCard', () => {
     const { rerender } = render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
     // Incomplete task should have blue gradient
-    const card = screen.getByText('Brush teeth').closest('div[role="button"]');
+    const card = screen.getByTestId('task-card');
     expect(card).toHaveClass('from-blue-50');
     expect(card).toHaveClass('to-indigo-50');
 
