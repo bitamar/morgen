@@ -16,8 +16,8 @@ class MockAudioContext {
       stop: vi.fn(),
       frequency: {
         setValueAtTime: vi.fn(),
-        exponentialRampToValueAtTime: vi.fn()
-      }
+        exponentialRampToValueAtTime: vi.fn(),
+      },
     };
   }
   createGain() {
@@ -25,8 +25,8 @@ class MockAudioContext {
       connect: vi.fn(),
       gain: {
         setValueAtTime: vi.fn(),
-        exponentialRampToValueAtTime: vi.fn()
-      }
+        exponentialRampToValueAtTime: vi.fn(),
+      },
     };
   }
 }
@@ -38,4 +38,4 @@ window.AudioContext = MockAudioContext as any;
 // Cleanup after each test case
 afterEach(() => {
   cleanup();
-}); 
+});

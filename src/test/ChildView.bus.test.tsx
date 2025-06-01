@@ -16,8 +16,8 @@ describe('ChildView Bus Timing', () => {
     busTime: '07:45',
     tasks: [
       { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false },
-      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-    ]
+      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+    ],
   };
 
   const mockOnUpdateChild = vi.fn();
@@ -30,11 +30,7 @@ describe('ChildView Bus Timing', () => {
 
   it('shows correct bus countdown', () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     // At 7:00 AM, bus is at 7:45 AM, should show "Bus in 45m 0s"
@@ -46,11 +42,7 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T07:45:00'));
 
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     expect(screen.getByText('Bus time!')).toBeInTheDocument();
@@ -61,11 +53,7 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T08:16:00'));
 
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     expect(screen.getByText('Bus has left')).toBeInTheDocument();
@@ -74,7 +62,7 @@ describe('ChildView Bus Timing', () => {
   it('handles no bus time set', () => {
     const childWithoutBusTime = {
       ...mockChild,
-      busTime: ''
+      busTime: '',
     };
 
     render(
@@ -95,11 +83,7 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T06:00:00'));
 
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     expect(screen.getByText('Bus in 1h 45m')).toBeInTheDocument();
@@ -110,11 +94,7 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T07:44:30'));
 
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     expect(screen.getByText(/Bus in \d+s/)).toBeInTheDocument();
@@ -125,14 +105,10 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T07:45:00'));
 
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     const busBadge = screen.getByText('Bus time!').closest('.flex');
     expect(busBadge).toHaveClass('bg-red-100', 'text-red-700', 'border-red-300');
   });
-}); 
+});

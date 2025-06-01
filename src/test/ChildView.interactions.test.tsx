@@ -17,8 +17,8 @@ describe('ChildView Interactions', () => {
     busTime: '07:45',
     tasks: [
       { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false },
-      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-    ]
+      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+    ],
   };
 
   const mockOnUpdateChild = vi.fn();
@@ -31,11 +31,7 @@ describe('ChildView Interactions', () => {
 
   it('opens edit mode when settings button is clicked', async () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     await userEvent.click(screen.getByRole('button', { name: /settings/i }));
@@ -57,11 +53,7 @@ describe('ChildView Interactions', () => {
 
   it('marks a task as done when clicked', async () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     await userEvent.click(screen.getByText('Brush teeth'));
@@ -69,8 +61,8 @@ describe('ChildView Interactions', () => {
       ...mockChild,
       tasks: [
         { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
-        { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-      ]
+        { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+      ],
     });
   });
 
@@ -81,8 +73,8 @@ describe('ChildView Interactions', () => {
           ...mockChild,
           tasks: [
             { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
-            { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-          ]
+            { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+          ],
         }}
         onUpdateChild={mockOnUpdateChild}
         onEditMode={mockOnEditMode}
@@ -94,8 +86,8 @@ describe('ChildView Interactions', () => {
       ...mockChild,
       tasks: [
         { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false },
-        { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-      ]
+        { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+      ],
     });
   });
 
@@ -104,7 +96,7 @@ describe('ChildView Interactions', () => {
       <ChildView
         child={{
           ...mockChild,
-          tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
+          tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }],
         }}
         onUpdateChild={mockOnUpdateChild}
         onEditMode={mockOnEditMode}
@@ -113,10 +105,13 @@ describe('ChildView Interactions', () => {
 
     // Click the celebration overlay
     await userEvent.click(screen.getByText(/All Done/i).closest('div[class*="fixed inset-0"]')!);
-    
+
     // Wait for the celebration to be removed from the DOM
-    await waitFor(() => {
-      expect(screen.queryByText(/All Done/i)).not.toBeInTheDocument();
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText(/All Done/i)).not.toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
   });
-}); 
+});

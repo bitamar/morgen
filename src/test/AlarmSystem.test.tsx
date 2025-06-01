@@ -4,26 +4,26 @@ const mockAudioContext = {
     connect: vi.fn(),
     frequency: {
       setValueAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn()
+      exponentialRampToValueAtTime: vi.fn(),
     },
     start: vi.fn(),
-    stop: vi.fn()
+    stop: vi.fn(),
   })),
   createGain: vi.fn(() => ({
     connect: vi.fn(),
     gain: {
       setValueAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn()
-    }
+      exponentialRampToValueAtTime: vi.fn(),
+    },
   })),
   destination: {},
   currentTime: 0,
   state: 'running',
-  resume: vi.fn().mockResolvedValue(undefined)
+  resume: vi.fn().mockResolvedValue(undefined),
 };
 
 Object.defineProperty(window, 'AudioContext', {
-  value: vi.fn(() => mockAudioContext)
+  value: vi.fn(() => mockAudioContext),
 });
 
 const mockAudio = {
@@ -31,11 +31,11 @@ const mockAudio = {
   pause: vi.fn(),
   currentTime: 0,
   loop: false,
-  volume: 1
+  volume: 1,
 };
 
 Object.defineProperty(window, 'Audio', {
-  value: vi.fn(() => mockAudio)
+  value: vi.fn(() => mockAudio),
 });
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -71,7 +71,7 @@ interface AlarmContextType {
 // Test component that uses the alarm context
 const TestComponent = ({ onMount }: { onMount?: (context: AlarmContextType) => void }) => {
   const context = useAlarm() as AlarmContextType;
-  
+
   useEffect(() => {
     onMount?.(context);
   }, [context, onMount]);
@@ -79,10 +79,17 @@ const TestComponent = ({ onMount }: { onMount?: (context: AlarmContextType) => v
   return (
     <div>
       <div data-testid="alarm-status">
-        {context.currentAlarm ? `${context.currentAlarm.type} alarm for ${context.currentAlarm.child.name}` : 'No alarm'}
+        {context.currentAlarm
+          ? `${context.currentAlarm.type} alarm for ${context.currentAlarm.child.name}`
+          : 'No alarm'}
       </div>
-      <button onClick={context.dismissAlarm} data-testid="dismiss-button">Dismiss</button>
-      <button onClick={() => context.triggerAlarm('test', { id: '1', name: 'Test Child' })} data-testid="trigger-button">
+      <button onClick={context.dismissAlarm} data-testid="dismiss-button">
+        Dismiss
+      </button>
+      <button
+        onClick={() => context.triggerAlarm('test', { id: '1', name: 'Test Child' })}
+        data-testid="trigger-button"
+      >
         Trigger Test Alarm
       </button>
     </div>
@@ -96,10 +103,8 @@ describe('AlarmSystem', () => {
       name: 'Test Child',
       wakeUpTime: '07:00',
       busTime: '07:45',
-      tasks: [
-        { id: 'task1', title: 'Brush teeth', done: false }
-      ]
-    }
+      tasks: [{ id: 'task1', title: 'Brush teeth', done: false }],
+    },
   ];
 
   beforeEach(() => {
@@ -202,7 +207,11 @@ describe('AlarmSystem', () => {
 
     render(
       <AlarmProvider childData={mockChildData}>
-        <TestComponent onMount={(context) => { alarmContext = context; }} />
+        <TestComponent
+          onMount={context => {
+            alarmContext = context;
+          }}
+        />
       </AlarmProvider>
     );
 
@@ -248,7 +257,11 @@ describe('AlarmSystem', () => {
 
     render(
       <AlarmProvider childData={mockChildData}>
-        <TestComponent onMount={(context) => { alarmContext = context; }} />
+        <TestComponent
+          onMount={context => {
+            alarmContext = context;
+          }}
+        />
       </AlarmProvider>
     );
 
@@ -272,4 +285,4 @@ describe('AlarmSystem', () => {
     expect(alarmStatus).toHaveTextContent('wakeup alarm for Test Child');
     expect(mockAudio.play).toHaveBeenCalledTimes(1);
   });
-}); 
+});

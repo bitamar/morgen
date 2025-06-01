@@ -16,8 +16,8 @@ describe('ChildView Rendering', () => {
     busTime: '07:45',
     tasks: [
       { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false },
-      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-    ]
+      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+    ],
   };
 
   const mockOnUpdateChild = vi.fn();
@@ -30,11 +30,7 @@ describe('ChildView Rendering', () => {
 
   it('renders child information correctly', () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     expect(screen.getByText("Test Child's Morning! 🌅")).toBeInTheDocument();
@@ -46,7 +42,7 @@ describe('ChildView Rendering', () => {
   it('shows empty state when no tasks are present', () => {
     const childWithoutTasks = {
       ...mockChild,
-      tasks: []
+      tasks: [],
     };
 
     render(
@@ -60,4 +56,4 @@ describe('ChildView Rendering', () => {
     expect(screen.getByText('No tasks yet!')).toBeInTheDocument();
     expect(screen.getByText('Add Tasks')).toBeInTheDocument();
   });
-}); 
+});

@@ -14,7 +14,7 @@ describe('ChildView Time', () => {
     avatar: '👶',
     wakeUpTime: '07:00',
     busTime: '07:45',
-    tasks: []
+    tasks: [],
   };
 
   const mockOnUpdateChild = vi.fn();
@@ -31,11 +31,7 @@ describe('ChildView Time', () => {
 
   it('displays current time in correct format', () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     expect(screen.getByText('7:00 AM')).toBeInTheDocument();
@@ -43,11 +39,7 @@ describe('ChildView Time', () => {
 
   it('updates time display every second', async () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     // Advance time by 1 second
@@ -60,15 +52,11 @@ describe('ChildView Time', () => {
 
   it('cleans up timer on unmount', () => {
     const { unmount } = render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
     unmount();
     expect(clearIntervalSpy).toHaveBeenCalled();
   });
-}); 
+});

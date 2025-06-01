@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 
 const mockDate = new Date('2024-03-20T07:00:00');
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {render, screen, act, waitFor} from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChildView from '../Components/ChildView';
 
@@ -15,8 +15,8 @@ describe('ChildView Tasks', () => {
     busTime: '07:45',
     tasks: [
       { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false },
-      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-    ]
+      { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+    ],
   };
 
   const mockOnUpdateChild = vi.fn();
@@ -34,11 +34,7 @@ describe('ChildView Tasks', () => {
 
   it('shows correct progress information', async () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
     expect(await screen.findByText('Progress: 0/2 tasks')).toBeInTheDocument();
     expect(await screen.findByText('0%')).toBeInTheDocument();
@@ -46,24 +42,22 @@ describe('ChildView Tasks', () => {
 
   it('updates progress when tasks are completed', async () => {
     render(
-      <ChildView
-        child={mockChild}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
     const task = await screen.findByText('Brush teeth');
     await userEvent.click(task);
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     await waitFor(() => {
       expect(mockOnUpdateChild).toHaveBeenCalledWith({
         ...mockChild,
         tasks: [
           { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
-          { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-        ]
+          { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+        ],
       });
     });
   });
@@ -71,7 +65,7 @@ describe('ChildView Tasks', () => {
   it('triggers completion celebration when all tasks are done', async () => {
     const childWithOneTask = {
       ...mockChild,
-      tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false }]
+      tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false }],
     };
 
     render(
@@ -84,12 +78,14 @@ describe('ChildView Tasks', () => {
 
     const task = await screen.findByText('Brush teeth');
     await userEvent.click(task);
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     await waitFor(() => {
       expect(mockOnUpdateChild).toHaveBeenCalledWith({
         ...childWithOneTask,
-        tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
+        tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }],
       });
     });
   });
@@ -97,7 +93,7 @@ describe('ChildView Tasks', () => {
   it('displays completion celebration UI when all tasks are done', async () => {
     const childWithCompletedTask = {
       ...mockChild,
-      tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
+      tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }],
     };
 
     render(
@@ -115,7 +111,7 @@ describe('ChildView Tasks', () => {
   it('handles empty tasks array', async () => {
     const childWithEmptyTasks = {
       ...mockChild,
-      tasks: []
+      tasks: [],
     };
 
     render(
@@ -132,7 +128,7 @@ describe('ChildView Tasks', () => {
   it('handles task toggle with empty tasks array', async () => {
     const childWithEmptyTasks = {
       ...mockChild,
-      tasks: []
+      tasks: [],
     };
 
     render(
@@ -145,7 +141,9 @@ describe('ChildView Tasks', () => {
 
     const addTasksBtn = await screen.findByRole('button', { name: /add tasks/i });
     await userEvent.click(addTasksBtn);
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     expect(mockOnEditMode).toHaveBeenCalled();
   });
 
@@ -154,8 +152,8 @@ describe('ChildView Tasks', () => {
       ...mockChild,
       tasks: [
         { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
-        { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-      ]
+        { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+      ],
     };
 
     render(
@@ -173,7 +171,7 @@ describe('ChildView Tasks', () => {
   it('hides progress bar when no tasks exist', async () => {
     const childWithoutTasks = {
       ...mockChild,
-      tasks: []
+      tasks: [],
     };
 
     render(
@@ -189,4 +187,4 @@ describe('ChildView Tasks', () => {
       expect(screen.queryByText(/%/)).not.toBeInTheDocument();
     });
   });
-}); 
+});
