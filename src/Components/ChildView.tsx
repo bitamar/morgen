@@ -119,7 +119,7 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                   </motion.div>
                   <div>
                     <Text size="6" weight="bold" className="text-gray-800">
-                      {child.name || 'Kiddo'}'s Morning! 🌅
+                      {`${child.name}'s Morning!`}
                     </Text>
                     <div className="flex items-center gap-2 flex-wrap mt-2">
                       <Badge variant="outline" className="flex items-center gap-1">
@@ -238,7 +238,7 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                   All Done, {child.name}!
                 </Text>
                 <Text size="3" className="text-gray-600">
-                  Fantastic work! You're ready for an amazing day! 🚌
+                  {`Fantastic work! You're ready for an amazing day! 🚌`}
                 </Text>
                 <motion.div
                   animate={{ y: [0, -10, 0] }}

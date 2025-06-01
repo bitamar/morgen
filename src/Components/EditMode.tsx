@@ -1,20 +1,7 @@
-import React, { useState, ChangeEvent, KeyboardEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, ChangeEvent, KeyboardEvent } from 'react';
+import { motion } from 'framer-motion';
 import { Card, Button, Text, Flex, Box } from '@radix-ui/themes';
-import {
-  X,
-  Plus,
-  Trash2,
-  GripVertical,
-  Save,
-  Clock,
-  User,
-  Smile,
-  Heart,
-  Star,
-  Sun,
-  Moon,
-} from 'lucide-react';
+import { X, Plus, Trash2, GripVertical, User, Star } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface Task {
@@ -138,7 +125,7 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
         <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <div className="flex items-center justify-between">
             <Text size="6" weight="bold">
-              Edit {editedChild.name || 'Child'}'s Routine
+              Edit {`${editedChild.name}'s`} Routine
             </Text>
             <Button
               variant="ghost"

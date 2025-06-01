@@ -2,31 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Button, Card, Text } from '@radix-ui/themes';
 import { AlarmClock, Bus, Clock, AlertTriangle } from 'lucide-react';
-import { useAlarm } from './AlarmSystem';
-
-interface Child {
-  id: string;
-  name: string;
-  avatar: string;
-  wakeUpTime: string;
-  busTime: string;
-  tasks: Array<{
-    id: string;
-    title: string;
-    emoji: string;
-    done: boolean;
-  }>;
-}
-
-interface Alarm {
-  type: 'wakeup' | 'warning' | 'departure';
-  child: Child;
-}
-
-interface AlarmSystem {
-  currentAlarm: Alarm | null;
-  dismissAlarm: () => void;
-}
+import { useAlarm } from '../context/alarm.ts';
 
 interface AlarmContent {
   icon: React.ElementType;
@@ -39,7 +15,7 @@ interface AlarmContent {
 }
 
 export default function AlarmOverlay() {
-  const { currentAlarm, dismissAlarm } = useAlarm() as AlarmSystem;
+  const { currentAlarm, dismissAlarm } = useAlarm();
 
   if (!currentAlarm) return null;
 

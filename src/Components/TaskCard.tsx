@@ -34,8 +34,7 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
       setIsAnimating(true);
 
       // Play a simple beep sound
-      const AudioContext = (window.AudioContext ||
-        (window as any).webkitAudioContext) as typeof window.AudioContext;
+      const AudioContext = window.AudioContext;
       const audioContext = new AudioContext();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();

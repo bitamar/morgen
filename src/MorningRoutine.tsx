@@ -168,13 +168,14 @@ export default function MorningRoutine() {
 
           {showChildManager && (
             <ChildManager
-              children={children}
               onSave={updated => {
                 handleChildrenUpdate(updated);
                 setShowChildManager(false);
               }}
               onClose={() => setShowChildManager(false)}
-            />
+            >
+              {children}
+            </ChildManager>
           )}
         </AnimatePresence>
 

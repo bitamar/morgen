@@ -1,4 +1,6 @@
 // Mock AudioContext and Audio before importing the component
+import { ReactNode } from 'react';
+
 const mockAudioContext = {
   createOscillator: vi.fn(() => ({
     connect: vi.fn(),
@@ -36,9 +38,9 @@ import TaskCard from '../Components/TaskCard';
 vi.mock('framer-motion', () => {
   return {
     motion: {
-      div: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+      div: ({ children }: { children: ReactNode }) => <div>{children}</div>,
     },
-    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
   };
 });
 
@@ -73,9 +75,7 @@ describe('TaskCard', () => {
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
     const card = screen.getByTestId('task-card');
-    await act(async () => {
-      await userEvent.click(card);
-    });
+    await userEvent.click(card);
 
     expect(mockOnToggle).toHaveBeenCalledWith('task1');
   });
@@ -94,9 +94,7 @@ describe('TaskCard', () => {
     const { rerender } = render(<TaskCard task={completedTask} onToggle={mockOnToggle} />);
 
     const card = screen.getByTestId('task-card');
-    await act(async () => {
-      await userEvent.click(card);
-    });
+    await userEvent.click(card);
 
     expect(mockOnToggle).toHaveBeenCalledWith('task1');
 
@@ -104,25 +102,25 @@ describe('TaskCard', () => {
     rerender(<TaskCard task={{ ...mockTask, done: false }} onToggle={mockOnToggle} />);
 
     // No celebration emoji should be shown
-    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).not.toBeInTheDocument();
     // "Great job!" text should be removed
     expect(screen.queryByText('Great job! ✨')).not.toBeInTheDocument();
   });
 
-  it('triggers celebration when marking task as complete', () => {
+  it('triggers celebration when marking task as complete', async () => {
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
     const card = screen.getByTestId('task-card');
     fireEvent.click(card);
 
     // Celebration emoji should be shown (any one from the array)
-    expect(screen.getByText(/[🎉✨🌟🎊💫🎈]/)).toBeInTheDocument();
+    expect(screen.getByText(/[🎉✨🌟🎊💫🎈]/u)).toBeInTheDocument();
 
     // Advance timers to check cleanup
     act(() => {
       vi.advanceTimersByTime(1000);
     });
-    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/)).toBeNull();
+    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).toBeNull();
   });
 
   it('plays sound when marking task as complete', async () => {
@@ -130,9 +128,7 @@ describe('TaskCard', () => {
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
     const card = screen.getByTestId('task-card');
-    await act(async () => {
-      await userEvent.click(card);
-    });
+    await userEvent.click(card);
 
     expect(mockAudioContext.createOscillator).toHaveBeenCalled();
     expect(mockAudioContext.createGain).toHaveBeenCalled();
@@ -146,9 +142,7 @@ describe('TaskCard', () => {
     expect(card).toHaveClass('opacity-50');
     expect(card).toHaveClass('cursor-not-allowed');
 
-    await act(async () => {
-      await userEvent.click(card);
-    });
+    await userEvent.click(card);
     expect(mockOnToggle).not.toHaveBeenCalled();
   });
 

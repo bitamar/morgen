@@ -33,7 +33,7 @@ describe('ChildView Rendering', () => {
       <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
     );
 
-    expect(screen.getByText("Test Child's Morning! 🌅")).toBeInTheDocument();
+    expect(screen.getByText("Test Child's Morning!")).toBeInTheDocument();
     expect(screen.getByText('Brush teeth')).toBeInTheDocument();
     expect(screen.getByText('Get dressed')).toBeInTheDocument();
     expect(screen.getByText('👶')).toBeInTheDocument();

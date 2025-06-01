@@ -32,8 +32,7 @@ class MockAudioContext {
 }
 
 // Add AudioContext to window
-window.AudioContext = MockAudioContext as any;
-(window as any).webkitAudioContext = MockAudioContext;
+window.AudioContext = MockAudioContext as unknown as typeof AudioContext;
 
 // Cleanup after each test case
 afterEach(() => {

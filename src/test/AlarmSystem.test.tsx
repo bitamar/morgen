@@ -1,4 +1,6 @@
 // Mock AudioContext and Audio before importing the component
+import { type AlarmContextType, useAlarm } from '../context/alarm.ts';
+
 const mockAudioContext = {
   createOscillator: vi.fn(() => ({
     connect: vi.fn(),
@@ -40,7 +42,7 @@ Object.defineProperty(window, 'Audio', {
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act, cleanup } from '@testing-library/react';
-import { AlarmProvider, useAlarm } from '../Components/AlarmSystem';
+import { AlarmProvider } from '../Components/AlarmSystem';
 import { useEffect } from 'react';
 
 // Configure test timeout
@@ -61,16 +63,9 @@ interface Child {
   tasks?: Task[];
 }
 
-interface AlarmContextType {
-  currentAlarm: { type: string; child: Child } | null;
-  dismissAlarm: () => void;
-  triggerAlarm: (type: string, child: Child) => void;
-  checkAlarms: () => void;
-}
-
 // Test component that uses the alarm context
 const TestComponent = ({ onMount }: { onMount?: (context: AlarmContextType) => void }) => {
-  const context = useAlarm() as AlarmContextType;
+  const context = useAlarm();
 
   useEffect(() => {
     onMount?.(context);
