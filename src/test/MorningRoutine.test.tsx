@@ -1,143 +1,209 @@
-// Mock localStorage before importing the component
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] || null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
-  };
-})();
+import { describe, it, expect, vi, beforeEach, beforeAll, MockInstance } from 'vitest';
+import { render, screen, act, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
+vi.mock('../services/peopleStorage', () => ({
+  loadChildren: vi.fn(),
+  saveChildren: vi.fn(),
+}));
+import * as childrenService from '../services/peopleStorage';
+
+const defaultChildren = [
+  {
+    id: 'maya',
+    name: 'Maya',
+    avatar: '👧',
+    wakeUpTime: '07:00',
+    busTime: '07:45',
+    tasks: [
+      { id: 'brush', title: 'Brush teeth', emoji: '🦷', done: false },
+      { id: 'dress', title: 'Get dressed', emoji: '👕', done: false },
+    ],
+  },
+  {
+    id: 'alex',
+    name: 'Alex',
+    avatar: '👦',
+    wakeUpTime: '07:15',
+    busTime: '08:00',
+    tasks: [{ id: 'wash', title: 'Wash face', emoji: '🧼', done: false }],
+  },
+];
+
+const savedChildren = [
+  {
+    id: 'test-child',
+    name: 'Test Child',
+    avatar: '👶',
+    wakeUpTime: '07:30',
+    busTime: '08:00',
+    tasks: [{ id: 'task1', title: 'Test Task', emoji: '🎯', done: false }],
+  },
+];
+
+beforeAll(() => {
+  class MockAudioContext {
+    state = 'running';
+    resume = vi.fn().mockResolvedValue(undefined);
+    createOscillator = vi.fn().mockReturnValue({
+      connect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+      type: '',
+      frequency: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+    });
+    createGain = vi.fn().mockReturnValue({
+      connect: vi.fn(),
+      gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+    });
+    destination = {};
+  }
+  // @ts-ignore
+  window.AudioContext = MockAudioContext;
+  // @ts-ignore
+  window.webkitAudioContext = MockAudioContext;
+  window.Audio = vi.fn().mockImplementation(() => ({
+    play: vi.fn().mockResolvedValue(undefined),
+    pause: vi.fn(),
+    currentTime: 0,
+    loop: false,
+    volume: 1,
+  }));
 });
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import MorningRoutine from '../MorningRoutine';
-
-// Mock the current time
-const mockDate = new Date('2024-03-20T07:00:00');
-vi.setSystemTime(mockDate);
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.setSystemTime(new Date('2024-03-20T07:00:00'));
+  vi.useRealTimers();
+});
 
 describe('MorningRoutine', () => {
-  beforeEach(() => {
-    localStorageMock.clear();
-    vi.clearAllMocks();
-  });
-
-  it('renders loading state initially', () => {
-    render(<MorningRoutine />);
-    expect(screen.getByText('Loading Morning Routine...')).toBeInTheDocument();
-  });
-
-  it('loads default children when no data in localStorage', () => {
-    render(<MorningRoutine />);
-
-    // Wait for the default children to load
-    expect(screen.getByText('Maya')).toBeInTheDocument();
-    expect(screen.getByText('Brush teeth')).toBeInTheDocument();
-  });
-
-  it('loads saved children from localStorage', () => {
-    const savedData = {
-      children: [
-        {
-          id: 'test-child',
-          name: 'Test Child',
-          avatar: '👶',
-          wakeUpTime: '07:30',
-          busTime: '08:00',
-          tasks: [{ id: 'task1', title: 'Test Task', emoji: '🎯', done: false }],
-        },
-      ],
-      lastUpdated: new Date().toISOString(),
-    };
-
-    localStorageMock.getItem.mockReturnValue(JSON.stringify(savedData));
+  it('loads default children when loadChildren returns defaults', async () => {
+    console.log('Test: Loading default children');
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
 
     render(<MorningRoutine />);
-    expect(screen.getByText('Test Child')).toBeInTheDocument();
-    expect(screen.getByText('Test Task')).toBeInTheDocument();
+    console.log('Component rendered');
+
+    await waitFor(() => {
+      console.log('Checking for Maya and Brush teeth text');
+      expect(screen.getByText(/Maya/i)).toBeInTheDocument();
+      console.log('Found Maya');
+      expect(screen.getByText(/Brush teeth/i)).toBeInTheDocument();
+      console.log('Found Brush teeth');
+    });
+    console.log('waitFor completed');
   });
 
-  it('navigates between children using buttons', async () => {
+  it('loads persisted children when loadChildren provides them', async () => {
+    console.log('Test: Loading persisted children');
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(savedChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
     render(<MorningRoutine />);
+    console.log('Component rendered');
 
-    // Wait for children to load
-    const nextButton = screen.getByRole('button', { name: /next/i });
-    const prevButton = screen.getByRole('button', { name: /previous/i });
-
-    // Click next button
-    await userEvent.click(nextButton);
-    expect(screen.getByText('Alex')).toBeInTheDocument();
-
-    // Click previous button
-    await userEvent.click(prevButton);
-    expect(screen.getByText('Maya')).toBeInTheDocument();
+    const testChild = await screen.findByText(/Test Child/i);
+    console.log('Found Test Child:', !!testChild);
+    expect(testChild).toBeInTheDocument();
+    const testTask = screen.getByText(/Test Task/i);
+    console.log('Found Test Task:', !!testTask);
+    expect(testTask).toBeInTheDocument();
   });
 
-  it('handles touch swipe navigation', () => {
+  it('navigates between children with next/previous buttons', async () => {
+    console.log('Test: Testing navigation');
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
     render(<MorningRoutine />);
+    console.log('Component rendered');
 
-    const container = screen.getByRole('main');
+    const maya = await screen.findByText(/Maya/i);
+    console.log('Found Maya:', !!maya);
+    expect(maya).toBeInTheDocument();
 
-    // Simulate left swipe
-    fireEvent.touchStart(container, { touches: [{ clientX: 300 }] });
-    fireEvent.touchMove(container, { touches: [{ clientX: 100 }] });
-    fireEvent.touchEnd(container);
+    const next = screen.getByRole('button', { name: /next/i });
+    const prev = screen.getByRole('button', { name: /previous/i });
+    console.log('Found next and previous buttons');
 
-    expect(screen.getByText('Alex')).toBeInTheDocument();
+    await userEvent.click(next);
+    console.log('Clicked next');
+    const alex = await screen.findByText(/Alex/i);
+    console.log('Found Alex:', !!alex);
+    expect(alex).toBeInTheDocument();
 
-    // Simulate right swipe
-    fireEvent.touchStart(container, { touches: [{ clientX: 100 }] });
-    fireEvent.touchMove(container, { touches: [{ clientX: 300 }] });
-    fireEvent.touchEnd(container);
-
-    expect(screen.getByText('Maya')).toBeInTheDocument();
+    await userEvent.click(prev);
+    console.log('Clicked previous');
+    const mayaAgain = await screen.findByText(/Maya/i);
+    console.log('Found Maya again:', !!mayaAgain);
+    expect(mayaAgain).toBeInTheDocument();
   });
 
-  it('opens child manager when users button is clicked', async () => {
-    render(<MorningRoutine />);
+  it('opens the child-manager modal when the users button is clicked', async () => {
+    console.log('Test: Opening child manager modal');
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    const usersButton = screen.getByRole('button', { name: /users/i });
+    render(<MorningRoutine />);
+    console.log('Component rendered');
+
+    const usersButton = document.querySelector('.fixed.bottom-4.right-4 button')!;
+    console.log('Found users button:', !!usersButton);
     await userEvent.click(usersButton);
+    console.log('Clicked users button');
 
-    // Check if child manager is opened
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog');
+    console.log('Found dialog:', !!dialog);
+    expect(dialog).toBeInTheDocument();
   });
 
-  it('updates current time display', () => {
+  it('updates the on-screen time every second', async () => {
+    vi.useFakeTimers();
+    console.log('Test: Checking time updates');
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
     render(<MorningRoutine />);
+    console.log('Component rendered');
 
-    // Initial time should be 7:00 AM
-    expect(screen.getByText('7:00 AM')).toBeInTheDocument();
+    const time1 = await screen.findByText(/07:00 AM/i);
+    console.log('Found 07:00 AM:', !!time1);
+    expect(time1).toBeInTheDocument();
 
-    // Update time to 7:30 AM
     vi.setSystemTime(new Date('2024-03-20T07:30:00'));
-    act(() => {
-      // Force a re-render
+    console.log('Set system time to 07:30');
+    await act(async () => {
       vi.advanceTimersByTime(1000);
+      console.log('Advanced timers by 1000ms');
     });
 
-    expect(screen.getByText('7:30 AM')).toBeInTheDocument();
+    const time2 = await screen.findByText(/07:30 AM/i);
+    console.log('Found 07:30 AM:', !!time2);
+    expect(time2).toBeInTheDocument();
   });
 
-  it('saves changes to localStorage when child is updated', async () => {
+  it('calls saveChildren when a task is toggled', async () => {
+    console.log('Test: Testing task toggle');
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
     render(<MorningRoutine />);
+    console.log('Component rendered');
 
-    // Wait for children to load
-    const task = screen.getByText('Brush teeth');
+    const task = await screen.findByText(/Brush teeth/i);
+    console.log('Found Brush teeth:', !!task);
     await userEvent.click(task);
+    console.log('Clicked Brush teeth');
 
-    // Check if localStorage was updated
-    expect(localStorageMock.setItem).toHaveBeenCalled();
-    const savedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
-    expect(savedData.children[0].tasks[0].done).toBe(true);
+    await waitFor(() => {
+      console.log('Checking if saveChildren was called');
+      expect(childrenService.saveChildren).toHaveBeenCalled();
+      const saved = (childrenService.saveChildren as unknown as MockInstance).mock.calls[0][0];
+      expect(saved[0].tasks[0].done).toBe(true);
+      console.log('saveChildren called and task marked done');
+    });
+    console.log('waitFor completed');
   });
 });

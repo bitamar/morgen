@@ -1,179 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button, Card, Flex, Text } from '@radix-ui/themes';
+import { Button } from '@radix-ui/themes';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { AlarmProvider } from './Components/AlarmSystem';
 import AlarmOverlay from './Components/AlarmOverlay';
 import ChildView from './Components/ChildView';
 import EditMode from './Components/EditMode';
 import ChildManager from './Components/ChildManager';
-
-// Local storage key
-const STORAGE_KEY = 'morningRoutine.v1';
-
-// Default data
-const getDefaultChildren = () => [
-  {
-    id: 'maya',
-    name: 'Maya',
-    avatar: '👧',
-    wakeUpTime: '07:00',
-    busTime: '07:45',
-    tasks: [
-      { id: 'brush', title: 'Brush teeth', emoji: '🦷', done: false },
-      { id: 'dress', title: 'Get dressed', emoji: '👕', done: false },
-      { id: 'breakfast', title: 'Eat breakfast', emoji: '🥣', done: false },
-      { id: 'backpack', title: 'Pack backpack', emoji: '🎒', done: false },
-    ],
-  },
-  {
-    id: 'alex',
-    name: 'Alex',
-    avatar: '👦',
-    wakeUpTime: '07:15',
-    busTime: '08:00',
-    tasks: [
-      { id: 'wash', title: 'Wash face', emoji: '🧼', done: false },
-      { id: 'dress2', title: 'Get dressed', emoji: '👕', done: false },
-      { id: 'breakfast2', title: 'Eat breakfast', emoji: '🥞', done: false },
-      { id: 'shoes', title: 'Put on shoes', emoji: '👟', done: false },
-    ],
-  },
-];
+import { type Child, loadChildren, saveChildren } from './services/peopleStorage.ts';
 
 export default function MorningRoutine() {
-  const [children, setChildren] = useState([]);
+  const [children, setChildren] = useState<Child[]>(() => loadChildren());
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
-  const [currentTime, setCurrentTime] = useState('');
-  const [editMode, setEditMode] = useState(null); // For individual child edit
-  const [showChildManager, setShowChildManager] = useState(false); // For managing all children
-  const [swipeDirection, setSwipeDirection] = useState(0); // 1 for next, -1 for prev
+  const [editMode, setEditMode] = useState<Child | null>(null); // modal – single child
+  const [showChildManager, setShowChildManager] = useState(false); // modal – all children
+  const [swipeDirection, setSwipeDirection] = useState(0); // 1 → next, -1 → prev
 
-  useEffect(() => {
-    loadChildren();
-    updateTime();
-    const timeInterval = setInterval(updateTime, 1000); // Updates time every second
-    return () => clearInterval(timeInterval);
-  }, []);
-
-  const loadChildren = () => {
-    try {
-      const savedData = localStorage.getItem(STORAGE_KEY);
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        // Ensure children array exists and is an array, fallback to default if not
-        const loadedChildren =
-          Array.isArray(parsedData.children) && parsedData.children.length > 0
-            ? parsedData.children
-            : getDefaultChildren();
-        setChildren(loadedChildren);
-        if (!(Array.isArray(parsedData.children) && parsedData.children.length > 0)) {
-          saveChildren(loadedChildren); // Save defaults if loaded data was bad or empty
-        }
-      } else {
-        const defaultChildren = getDefaultChildren();
-        saveChildren(defaultChildren);
-        setChildren(defaultChildren);
-      }
-    } catch (error) {
-      console.error('Error loading children:', error);
-      const defaultChildren = getDefaultChildren();
-      setChildren(defaultChildren);
-      saveChildren(defaultChildren);
-    }
-  };
-
-  const saveChildren = childrenData => {
-    try {
-      const dataToSave = {
-        children: childrenData,
-        lastUpdated: new Date().toISOString(),
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-    } catch (error) {
-      console.error('Error saving children:', error);
-    }
-  };
-
-  const updateTime = () => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
+  const handleChildUpdate = (updated: Child) => {
+    setChildren(prev => {
+      const next = prev.map(c => (c.id === updated.id ? updated : c));
+      saveChildren(next);
+      return next;
     });
-    setCurrentTime(timeString);
   };
 
-  const handleChildUpdate = updatedChild => {
-    const updatedChildren = children.map(child =>
-      child.id === updatedChild.id ? updatedChild : child
-    );
-    setChildren(updatedChildren);
-    saveChildren(updatedChildren);
-  };
-
-  const handleChildrenUpdate = updatedChildren => {
-    setChildren(updatedChildren);
-    saveChildren(updatedChildren);
-
-    // Adjust current index if necessary
-    if (currentChildIndex >= updatedChildren.length) {
-      setCurrentChildIndex(Math.max(0, updatedChildren.length - 1));
+  const handleChildrenUpdate = (next: Child[]) => {
+    setChildren(next);
+    saveChildren(next);
+    if (currentChildIndex >= next.length) {
+      setCurrentChildIndex(Math.max(0, next.length - 1));
     }
   };
 
   const nextChild = () => {
     setSwipeDirection(1);
-    setCurrentChildIndex(prev => (prev + 1) % children.length);
+    setCurrentChildIndex(i => (i + 1) % children.length);
   };
 
   const prevChild = () => {
     setSwipeDirection(-1);
-    setCurrentChildIndex(prev => (prev - 1 + children.length) % children.length);
+    setCurrentChildIndex(i => (i - 1 + children.length) % children.length);
   };
 
-  const handleUsersButtonClick = () => {
-    setShowChildManager(true);
-  };
-
-  const currentChild = children[currentChildIndex];
-
-  // Touch handling for swipe navigation
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
-
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const minSwipeDistance = 50;
 
-  const onTouchStart = e => {
-    // Allow swipe only if no modal is open
+  const onTouchStart = (e: React.TouchEvent) => {
     if (editMode || showChildManager) return;
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const onTouchMove = e => {
+  const onTouchMove = (e: React.TouchEvent) => {
     if (editMode || showChildManager) return;
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const onTouchEnd = () => {
-    if (editMode || showChildManager) return;
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe && children.length > 1) {
-      nextChild();
-    }
-    if (isRightSwipe && children.length > 1) {
-      prevChild();
-    }
+    if (editMode || showChildManager || touchStart == null || touchEnd == null) return;
+    const dist = touchStart - touchEnd;
+    if (dist > minSwipeDistance && children.length > 1) nextChild();
+    if (dist < -minSwipeDistance && children.length > 1) prevChild();
   };
 
-  if (children.length === 0 || !currentChild) {
+  const currentChild = children[currentChildIndex];
+  if (!currentChild) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -193,43 +85,38 @@ export default function MorningRoutine() {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Child Navigation */}
+        {/* -------- child navigation dots & arrows -------- */}
         {children.length > 1 && (
           <div className="fixed top-4 left-0 right-0 px-4 z-40">
-            {' '}
-            {/* Added px-4 for consistent padding */}
             <div className="flex items-center justify-between max-w-md mx-auto">
-              {' '}
-              {/* Centered nav for smaller screens */}
               <Button
                 variant="outline"
-                size="icon"
+                size="2"
                 onClick={prevChild}
                 className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg"
+                aria-label="Previous child"
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
+
               <div className="flex gap-2">
-                {children.map(
-                  (
-                    child,
-                    index // Added child key
-                  ) => (
-                    <motion.div
-                      key={child.id || index} // Use child.id if available
-                      className={`w-3 h-3 rounded-full transition-all cursor-pointer ${
-                        index === currentChildIndex ? 'bg-blue-500 w-8' : 'bg-white/50'
-                      }`}
-                      onClick={() => setCurrentChildIndex(index)}
-                    />
-                  )
-                )}
+                {children.map((child, idx) => (
+                  <motion.div
+                    key={child.id || idx}
+                    className={`w-3 h-3 rounded-full transition-all cursor-pointer ${
+                      idx === currentChildIndex ? 'bg-blue-500 w-8' : 'bg-white/50'
+                    }`}
+                    onClick={() => setCurrentChildIndex(idx)}
+                  />
+                ))}
               </div>
+
               <Button
                 variant="outline"
-                size="icon"
+                size="2"
                 onClick={nextChild}
                 className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg"
+                aria-label="Next child"
               >
                 <ChevronRight className="w-5 h-5" />
               </Button>
@@ -237,23 +124,23 @@ export default function MorningRoutine() {
           </div>
         )}
 
-        {/* Users Button (was Edit Mode Toggle) */}
+        {/* -------- user / manager button -------- */}
         <div className="fixed bottom-4 right-4 z-40">
           <Button
             variant="outline"
-            size="icon"
-            onClick={handleUsersButtonClick}
+            size="2"
+            onClick={() => setShowChildManager(true)}
             className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg ring-2 ring-purple-500 cursor-pointer"
           >
             <Users className="w-5 h-5" />
           </Button>
         </div>
 
-        {/* Main Content */}
+        {/* -------- main child view -------- */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentChild.id || currentChildIndex} // Use child.id for more stable key
-            initial={{ opacity: 0, x: swipeDirection * 300 }} // Animate based on swipe direction
+            key={currentChild.id}
+            initial={{ opacity: 0, x: swipeDirection * 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: swipeDirection * -300 }}
             transition={{ type: 'spring', damping: 20, stiffness: 100 }}
@@ -261,41 +148,37 @@ export default function MorningRoutine() {
             <ChildView
               child={currentChild}
               onUpdateChild={handleChildUpdate}
-              onEditMode={() => setEditMode(currentChild)} // Directly pass function to open individual child edit
-              currentTime={currentTime}
+              onEditMode={() => setEditMode(currentChild)}
             />
           </motion.div>
         </AnimatePresence>
 
-        {/* Edit Mode Modal (for individual child) */}
+        {/* -------- modals -------- */}
         <AnimatePresence>
           {editMode && (
             <EditMode
               child={editMode}
-              onSave={updatedChildData => {
-                handleChildUpdate(updatedChildData);
-                setEditMode(null); // Close modal on save
+              onSave={updated => {
+                handleChildUpdate(updated);
+                setEditMode(null);
               }}
               onClose={() => setEditMode(null)}
             />
           )}
-        </AnimatePresence>
 
-        {/* Child Manager Modal (for all children) */}
-        <AnimatePresence>
           {showChildManager && (
             <ChildManager
               children={children}
-              onSave={updatedChildrenData => {
-                handleChildrenUpdate(updatedChildrenData);
-                setShowChildManager(false); // Close modal on save
+              onSave={updated => {
+                handleChildrenUpdate(updated);
+                setShowChildManager(false);
               }}
               onClose={() => setShowChildManager(false)}
             />
           )}
         </AnimatePresence>
 
-        {/* Alarm Overlay */}
+        {/* -------- alarms -------- */}
         <AlarmOverlay />
       </div>
     </AlarmProvider>

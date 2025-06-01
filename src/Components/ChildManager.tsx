@@ -50,6 +50,7 @@ export default function ChildManager({ children, onSave, onClose }: ChildManager
 
   return (
     <motion.div
+      role="dialog"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
