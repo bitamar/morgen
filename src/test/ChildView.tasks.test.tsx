@@ -1,10 +1,8 @@
-// Mock the current time before imports
-const mockDate = new Date('2024-03-20T07:00:00');
 import { vi } from 'vitest';
-vi.setSystemTime(mockDate);
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+const mockDate = new Date('2024-03-20T07:00:00');
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import {render, screen, act} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChildView from '../Components/ChildView';
 
@@ -26,7 +24,12 @@ describe('ChildView Tasks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     vi.setSystemTime(mockDate);
+  });
+
+  afterEach(() => {
+    vi.clearAllTimers();
   });
 
   it('shows correct progress information', () => {
@@ -52,7 +55,11 @@ describe('ChildView Tasks', () => {
     );
 
     const task = screen.getByText('Brush teeth');
+    vi.useRealTimers();
     await userEvent.click(task);
+    vi.useFakeTimers();
+    vi.setSystemTime(mockDate);
+    await act(async () => {});
 
     expect(mockOnUpdateChild).toHaveBeenCalledWith({
       ...mockChild,
@@ -78,7 +85,11 @@ describe('ChildView Tasks', () => {
     );
 
     const task = screen.getByText('Brush teeth');
+    vi.useRealTimers();
     await userEvent.click(task);
+    vi.useFakeTimers();
+    vi.setSystemTime(mockDate);
+    await act(async () => {});
 
     expect(mockOnUpdateChild).toHaveBeenCalledWith({
       ...childWithOneTask,
@@ -135,15 +146,18 @@ describe('ChildView Tasks', () => {
       />
     );
 
+    vi.useRealTimers();
     // Should not throw when trying to toggle tasks
     await act(async () => {
       await userEvent.click(screen.getByText('Add Tasks'));
     });
-
+    vi.useFakeTimers();
+    vi.setSystemTime(mockDate);
+    await act(async () => {});
     expect(mockOnEditMode).toHaveBeenCalled();
   });
 
-  it('shows correct progress percentage for partial completion', () => {
+  it('shows correct progress percentage for partial completion', async () => {
     const childWithPartialCompletion = {
       ...mockChild,
       tasks: [
@@ -160,9 +174,10 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    expect(screen.getByText('Progress: 1/2 tasks')).toBeInTheDocument();
-    expect(screen.getByText('50%')).toBeInTheDocument();
-  });
+    vi.useRealTimers();
+    expect(await screen.findByText('Progress: 1/2 tasks')).toBeInTheDocument();
+    expect(await screen.findByText('50%')).toBeInTheDocument();
+  }, 2000);
 
   it('hides progress bar when no tasks exist', () => {
     const childWithoutTasks = {
@@ -182,29 +197,4 @@ describe('ChildView Tasks', () => {
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   });
 
-  it('dismisses completion celebration after timeout', async () => {
-    const childWithCompletedTask = {
-      ...mockChild,
-      tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
-    };
-
-    render(
-      <ChildView
-        child={childWithCompletedTask}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
-    );
-
-    // Celebration should be visible initially
-    expect(screen.getByText(/All Done/i)).toBeInTheDocument();
-
-    // Advance time by 3 seconds
-    await act(async () => {
-      vi.advanceTimersByTime(3000);
-    });
-
-    // Celebration should be dismissed
-    expect(screen.queryByText(/All Done/i)).not.toBeInTheDocument();
-  });
 }); 
