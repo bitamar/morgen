@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 
 const mockDate = new Date('2024-03-20T07:00:00');
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {render, screen, act} from '@testing-library/react';
+import {render, screen, act, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChildView from '../Components/ChildView';
 
@@ -24,7 +24,7 @@ describe('ChildView Tasks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
+    vi.useRealTimers();
     vi.setSystemTime(mockDate);
   });
 
@@ -32,7 +32,7 @@ describe('ChildView Tasks', () => {
     vi.clearAllTimers();
   });
 
-  it('shows correct progress information', () => {
+  it('shows correct progress information', async () => {
     render(
       <ChildView
         child={mockChild}
@@ -40,9 +40,8 @@ describe('ChildView Tasks', () => {
         onEditMode={mockOnEditMode}
       />
     );
-
-    expect(screen.getByText('Progress: 0/2 tasks')).toBeInTheDocument();
-    expect(screen.getByText('0%')).toBeInTheDocument();
+    expect(await screen.findByText('Progress: 0/2 tasks')).toBeInTheDocument();
+    expect(await screen.findByText('0%')).toBeInTheDocument();
   });
 
   it('updates progress when tasks are completed', async () => {
@@ -54,19 +53,18 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    const task = screen.getByText('Brush teeth');
-    vi.useRealTimers();
+    const task = await screen.findByText('Brush teeth');
     await userEvent.click(task);
-    vi.useFakeTimers();
-    vi.setSystemTime(mockDate);
-    await act(async () => {});
+    await act(async () => { await Promise.resolve(); });
 
-    expect(mockOnUpdateChild).toHaveBeenCalledWith({
-      ...mockChild,
-      tasks: [
-        { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
-        { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
-      ]
+    await waitFor(() => {
+      expect(mockOnUpdateChild).toHaveBeenCalledWith({
+        ...mockChild,
+        tasks: [
+          { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
+          { id: 'task2', title: 'Get dressed', emoji: '👕', done: false }
+        ]
+      });
     });
   });
 
@@ -84,20 +82,19 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    const task = screen.getByText('Brush teeth');
-    vi.useRealTimers();
+    const task = await screen.findByText('Brush teeth');
     await userEvent.click(task);
-    vi.useFakeTimers();
-    vi.setSystemTime(mockDate);
-    await act(async () => {});
+    await act(async () => { await Promise.resolve(); });
 
-    expect(mockOnUpdateChild).toHaveBeenCalledWith({
-      ...childWithOneTask,
-      tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
+    await waitFor(() => {
+      expect(mockOnUpdateChild).toHaveBeenCalledWith({
+        ...childWithOneTask,
+        tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
+      });
     });
   });
 
-  it('displays completion celebration UI when all tasks are done', () => {
+  it('displays completion celebration UI when all tasks are done', async () => {
     const childWithCompletedTask = {
       ...mockChild,
       tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }]
@@ -111,11 +108,11 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    expect(screen.getByText(/All Done/i)).toBeInTheDocument();
-    expect(screen.getByText(/Fantastic work!/i)).toBeInTheDocument();
+    expect(await screen.findByText(/All Done/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Fantastic work!/i)).toBeInTheDocument();
   });
 
-  it('handles empty tasks array', () => {
+  it('handles empty tasks array', async () => {
     const childWithEmptyTasks = {
       ...mockChild,
       tasks: []
@@ -129,7 +126,7 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    expect(screen.getByText('No tasks yet!')).toBeInTheDocument();
+    expect(await screen.findByText('No tasks yet!')).toBeInTheDocument();
   });
 
   it('handles task toggle with empty tasks array', async () => {
@@ -146,14 +143,9 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    vi.useRealTimers();
-    // Should not throw when trying to toggle tasks
-    await act(async () => {
-      await userEvent.click(screen.getByText('Add Tasks'));
-    });
-    vi.useFakeTimers();
-    vi.setSystemTime(mockDate);
-    await act(async () => {});
+    const addTasksBtn = await screen.findByRole('button', { name: /add tasks/i });
+    await userEvent.click(addTasksBtn);
+    await act(async () => { await Promise.resolve(); });
     expect(mockOnEditMode).toHaveBeenCalled();
   });
 
@@ -174,12 +166,11 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    vi.useRealTimers();
     expect(await screen.findByText('Progress: 1/2 tasks')).toBeInTheDocument();
     expect(await screen.findByText('50%')).toBeInTheDocument();
-  }, 2000);
+  });
 
-  it('hides progress bar when no tasks exist', () => {
+  it('hides progress bar when no tasks exist', async () => {
     const childWithoutTasks = {
       ...mockChild,
       tasks: []
@@ -193,8 +184,9 @@ describe('ChildView Tasks', () => {
       />
     );
 
-    expect(screen.queryByText(/Progress:/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+    await waitFor(async () => {
+      expect(screen.queryByText(/Progress:/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+    });
   });
-
 }); 
