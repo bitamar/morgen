@@ -217,12 +217,12 @@ describe('AlarmSystem', () => {
 
     // Set up an alarm to dismiss
     await act(async () => {
-      alarmContext.triggerAlarm('wakeup', { id: '1', name: 'Test Child' });
+      alarmContext?.triggerAlarm('wakeup', { id: '1', name: 'Test Child' });
     });
 
     // Dismiss alarm using context
     await act(async () => {
-      alarmContext.dismissAlarm();
+      alarmContext?.dismissAlarm();
     });
 
     // Verify alarm is dismissed
@@ -263,7 +263,7 @@ describe('AlarmSystem', () => {
 
     // Trigger alarm
     await act(async () => {
-      alarmContext.triggerAlarm('wakeup', { id: '1', name: 'Test Child' });
+      alarmContext?.triggerAlarm('wakeup', { id: '1', name: 'Test Child' });
     });
 
     // Verify alarm is triggered
