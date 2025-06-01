@@ -4,10 +4,6 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  css: {
-    postcss: './postcss.config.js',
-  },
-  test: {
-    environment: 'jsdom',
-  },
+  base: '/morgen/',
+  css: { postcss: './postcss.config.js' },
 });
