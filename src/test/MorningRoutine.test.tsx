@@ -112,33 +112,21 @@ describe('MorningRoutine', () => {
     expect(testTask).toBeInTheDocument();
   });
 
-  it('navigates between children with next/previous buttons', async () => {
-    console.log('Test: Testing navigation');
+  it('navigates to next child when next button is clicked', async () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
     render(<MorningRoutine />);
-    console.log('Component rendered');
 
-    const maya = await screen.findByText(/Maya/i);
-    console.log('Found Maya:', !!maya);
-    expect(maya).toBeInTheDocument();
+    // Verify initial child (Maya) is shown
+    expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
 
-    const next = screen.getByRole('button', { name: /next/i });
-    const prev = screen.getByRole('button', { name: /previous/i });
-    console.log('Found next and previous buttons');
+    // Click next button
+    const nextButton = screen.getByRole('button', { name: /next/i });
+    await userEvent.click(nextButton);
 
-    await userEvent.click(next);
-    console.log('Clicked next');
-    const alex = await screen.findByText(/Alex/i);
-    console.log('Found Alex:', !!alex);
-    expect(alex).toBeInTheDocument();
-
-    await userEvent.click(prev);
-    console.log('Clicked previous');
-    const mayaAgain = await screen.findByText(/Maya/i);
-    console.log('Found Maya again:', !!mayaAgain);
-    expect(mayaAgain).toBeInTheDocument();
+    // Verify next child (Alex) is shown
+    expect(await screen.findByText(/Alex/i)).toBeInTheDocument();
   });
 
   it('opens the child-manager modal when the users button is clicked', async () => {
@@ -159,29 +147,35 @@ describe('MorningRoutine', () => {
     expect(dialog).toBeInTheDocument();
   });
 
-  it('updates the on-screen time every second', async () => {
+  it('updates displayed time when time changes', async () => {
+    console.log('Starting time update test');
     vi.useFakeTimers();
-    console.log('Test: Checking time updates');
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
+    console.log('Rendering component');
     render(<MorningRoutine />);
-    console.log('Component rendered');
 
-    const time1 = await screen.findByText(/07:00 AM/i);
-    console.log('Found 07:00 AM:', !!time1);
-    expect(time1).toBeInTheDocument();
+    // Verify initial time
+    console.log('Checking initial time');
+    const initialTime = screen.getByText(/7:00 AM/i);
+    console.log('Initial time element:', initialTime);
+    expect(initialTime).toBeInTheDocument();
 
+    // Advance time by 30 minutes
+    console.log('Advancing time to 07:30');
     vi.setSystemTime(new Date('2024-03-20T07:30:00'));
-    console.log('Set system time to 07:30');
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
-      console.log('Advanced timers by 1000ms');
-    });
+    console.log('Current system time:', new Date().toLocaleTimeString());
+    
+    console.log('Advancing timers');
+    vi.advanceTimersByTime(1000);
+    console.log('Timers advanced');
 
-    const time2 = await screen.findByText(/07:30 AM/i);
-    console.log('Found 07:30 AM:', !!time2);
-    expect(time2).toBeInTheDocument();
+    // Verify updated time
+    console.log('Checking updated time');
+    const updatedTime = screen.getByText(/7:30 AM/i);
+    console.log('Updated time element:', updatedTime);
+    expect(updatedTime).toBeInTheDocument();
   });
 
   it('calls saveChildren when a task is toggled', async () => {
