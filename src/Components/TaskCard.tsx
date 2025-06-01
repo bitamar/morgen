@@ -127,9 +127,9 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
                             `}
                         >
                             {task.done ? (
-                                <Check className="w-6 h-6" />
+                                <Check className="w-6 h-6" data-testid="check-icon" />
                             ) : (
-                                <div className="w-4 h-4 rounded-full border-2 border-current" />
+                                <div className="w-4 h-4 rounded-full border-2 border-current" data-testid="empty-circle" />
                             )}
                         </motion.div>
                     </Flex>
