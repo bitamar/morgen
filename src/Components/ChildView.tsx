@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Button, Text, Badge } from '@radix-ui/themes';
 import { Clock, Settings, CheckCircle2, Target } from 'lucide-react';
@@ -27,85 +27,71 @@ interface ChildViewProps {
 }
 
 export default function ChildView({ child, onUpdateChild, onEditMode }: ChildViewProps) {
-  const [completedCount, setCompletedCount] = useState(0);
   const [showCompletionCelebration, setShowCompletionCelebration] = useState(false);
   const [busCountdown, setBusCountdown] = useState('');
   const [pageCurrentTime, setPageCurrentTime] = useState(new Date());
 
-  // Effect to update current time every second
   useEffect(() => {
-    const updateTime = () => {
-      setPageCurrentTime(new Date());
-    };
-
-    // Update immediately
-    updateTime();
-
-    // Then update every second
-    const timerId = setInterval(updateTime, 1000);
-    return () => clearInterval(timerId);
+    const tick = () => setPageCurrentTime(new Date());
+    tick(); // fire once immediately
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, []);
 
-  // Effect to check for task completion celebration
   useEffect(() => {
-    const completed = child.tasks?.filter(task => task.done).length || 0;
-    const total = child.tasks?.length || 0;
+    const completed = child.tasks?.filter(t => t.done).length ?? 0;
+    const total = child.tasks?.length ?? 0;
 
-    // Trigger celebration only if all tasks are done and it's a new completion
-    if (total > 0 && completed === total && completed > completedCount) {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    if (total > 0 && completed === total) {
       setShowCompletionCelebration(true);
-      setTimeout(() => setShowCompletionCelebration(false), 3000);
+      timeoutId = setTimeout(() => setShowCompletionCelebration(false), 3000);
     }
 
-    setCompletedCount(completed);
-  }, [child.tasks, completedCount]);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [child.tasks]);
 
-  // Effect to calculate bus countdown
   useEffect(() => {
     if (!child.busTime) {
       setBusCountdown('');
       return;
     }
 
-    const [hours, minutes] = child.busTime.split(':').map(Number);
+    const [h, m] = child.busTime.split(':').map(Number);
     const busTimeToday = new Date(pageCurrentTime);
-    busTimeToday.setHours(hours, minutes, 0, 0);
+    busTimeToday.setHours(h, m, 0, 0);
 
     const diff = busTimeToday.getTime() - pageCurrentTime.getTime();
 
-    // Check if bus time is more than 30 minutes in the past
-    if (diff <= -30 * 60 * 1000) {
-      setBusCountdown('Bus has left');
-    } else if (diff <= 0) {
-      setBusCountdown('Bus time!');
-    } else {
-      const totalSeconds = Math.floor(diff / 1000);
+    if (diff <= -30 * 60_000) setBusCountdown('Bus has left');
+    else if (diff <= 0) setBusCountdown('Bus time!');
+    else {
+      const totalSeconds = Math.floor(diff / 1_000);
       const s = totalSeconds % 60;
-      const m = Math.floor(totalSeconds / 60) % 60;
-      const h = Math.floor(totalSeconds / 3600);
+      const mm = Math.floor(totalSeconds / 60) % 60;
+      const hh = Math.floor(totalSeconds / 3_600);
 
-      if (h > 0) {
-        setBusCountdown(`Bus in ${h}h ${m}m`);
-      } else if (m > 0) {
-        setBusCountdown(`Bus in ${m}m ${s}s`);
-      } else {
-        setBusCountdown(`Bus in ${s}s`);
-      }
+      if (hh > 0) setBusCountdown(`Bus in ${hh}h ${mm}m`);
+      else if (mm > 0) setBusCountdown(`Bus in ${mm}m ${s}s`);
+      else setBusCountdown(`Bus in ${s}s`);
     }
   }, [child.busTime, pageCurrentTime]);
 
+  // --- task toggle handler ---------------------------------------------------
   const handleTaskToggle = (taskId: string) => {
     const updatedTasks =
-      child.tasks?.map(task => (task.id === taskId ? { ...task, done: !task.done } : task)) || [];
-
+      child.tasks?.map(t => (t.id === taskId ? { ...t, done: !t.done } : t)) ?? [];
     onUpdateChild({ ...child, tasks: updatedTasks });
   };
 
-  const completedTasks = child.tasks?.filter(task => task.done).length || 0;
-  const totalTasks = child.tasks?.length || 0;
+  // --- progress & formatted clock -------------------------------------------
+  const completedTasks = child.tasks?.filter(t => t.done).length ?? 0;
+  const totalTasks = child.tasks?.length ?? 0;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  // Format the internal pageCurrentTime for display
   const displayTime = pageCurrentTime.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
