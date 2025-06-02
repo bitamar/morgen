@@ -75,6 +75,8 @@ describe('SoundService', () => {
 
     // Create new instance for each test
     soundService = new SoundService();
+    // Initialize audio context
+    soundService['audioContext'] = mockAudioContext as unknown as AudioContext;
   });
 
   afterEach(() => {
@@ -117,6 +119,26 @@ describe('SoundService', () => {
       expect(mockBufferSource.start).toHaveBeenCalledWith(0);
       expect(mockBufferSource.loop).toBe(true);
       expect(source).toBe(mockBufferSource);
+    });
+
+    it('should use cached audio buffer on subsequent playAlarm calls', async () => {
+      const mockArrayBuffer = new ArrayBuffer(8);
+      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
+
+      (window.fetch as Mock).mockResolvedValueOnce({
+        arrayBuffer: () => Promise.resolve(mockArrayBuffer),
+      });
+      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
+
+      // First call: loads and caches
+      await soundService.playAlarm();
+
+      // Second call: should hit cache, so fetch and decodeAudioData should not be called again
+      const fetchSpy = vi.spyOn(window, 'fetch');
+      const decodeSpy = vi.spyOn(mockAudioContext, 'decodeAudioData');
+      await soundService.playAlarm();
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(decodeSpy).not.toHaveBeenCalled();
     });
 
     it('should stop alarm sound', async () => {
@@ -164,6 +186,109 @@ describe('SoundService', () => {
       expect(mockOscillator.connect).toHaveBeenCalled();
       expect(mockOscillator.start).toHaveBeenCalled();
       expect(mockOscillator.stop).toHaveBeenCalled();
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle audio context initialization failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockError = new Error('AudioContext not supported');
+
+      // Mock AudioContext constructor to throw
+      window.AudioContext = vi.fn(() => {
+        throw mockError;
+      }) as unknown as typeof AudioContext;
+
+      // Create a new instance to ensure clean state
+      const newSoundService = new SoundService();
+      await newSoundService.playTaskCompletion();
+
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to initialize audio context:', mockError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle audio file loading failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockError = new Error('Network error');
+
+      (window.fetch as Mock).mockRejectedValueOnce(mockError);
+
+      await expect(soundService.playAlarm()).rejects.toThrow('Network error');
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to load audio file:', mockError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle audio decoding failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockError = new Error('Invalid audio data');
+
+      (window.fetch as Mock).mockResolvedValueOnce({
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+      });
+
+      mockAudioContext.decodeAudioData.mockRejectedValueOnce(mockError);
+
+      await expect(soundService.playAlarm()).rejects.toThrow('Invalid audio data');
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to load audio file:', mockError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle task completion sound failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockError = new Error('Oscillator creation failed');
+
+      mockAudioContext.createOscillator = vi.fn(() => {
+        throw mockError;
+      });
+
+      await soundService.playTaskCompletion();
+
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to play task completion sound:', mockError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle play alarm failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockError = new Error('Playback failed');
+
+      // Mock fetch to return a valid response
+      (window.fetch as Mock).mockResolvedValueOnce({
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+      });
+
+      // Mock decodeAudioData to return a valid buffer
+      mockAudioContext.decodeAudioData.mockResolvedValueOnce(
+        new ArrayBuffer(8) as unknown as AudioBuffer
+      );
+
+      // Mock createBufferSource to throw
+      mockAudioContext.createBufferSource = vi.fn(() => {
+        throw mockError;
+      });
+
+      await expect(soundService.playAlarm()).rejects.toThrow('Playback failed');
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to play alarm sound:', mockError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should throw when audio context is not available for playAlarm', async () => {
+      // Create a new instance with no audio context
+      const newSoundService = new SoundService();
+      // @ts-expect-error - Force audioContext to be null
+      newSoundService.audioContext = null;
+
+      await expect(newSoundService.playAlarm()).rejects.toThrow('Audio context not available');
+    });
+
+    it('should throw when audio context is not available for loadAudioFile', async () => {
+      // Create a new instance with no audio context
+      const newSoundService = new SoundService();
+      // @ts-expect-error - Force audioContext to be null
+      newSoundService.audioContext = null;
+
+      await expect(newSoundService['loadAudioFile']('/sounds/alarm.mp3')).rejects.toThrow(
+        'Audio context not available'
+      );
     });
   });
 });

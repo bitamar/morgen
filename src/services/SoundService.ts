@@ -20,14 +20,9 @@ export class SoundService {
 
   private async loadAudioFile(url: string): Promise<AudioBuffer> {
     if (!this.audioContext) {
-      await this.initializeAudioContext();
-    }
-
-    if (!this.audioContext) {
       throw new Error('Audio context not available');
     }
 
-    // Check if we already have this audio file cached
     if (this.audioBuffers.has(url)) {
       return this.audioBuffers.get(url)!;
     }
@@ -45,10 +40,6 @@ export class SoundService {
   }
 
   public async playAlarm(loop: boolean = false): Promise<AudioBufferSourceNode> {
-    if (!this.audioContext) {
-      await this.initializeAudioContext();
-    }
-
     if (!this.audioContext) {
       throw new Error('Audio context not available');
     }
