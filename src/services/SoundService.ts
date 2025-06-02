@@ -2,6 +2,7 @@ export class SoundService {
   private audioContext: AudioContext | null = null;
   private isInitialized = false;
   private audioBuffers: Map<string, AudioBuffer> = new Map();
+  private currentAlarmSource: AudioBufferSourceNode | null = null;
 
   constructor() {
     this.initializeAudioContext = this.initializeAudioContext.bind(this);
@@ -39,12 +40,15 @@ export class SoundService {
     }
   }
 
-  public async playAlarm(loop: boolean = false): Promise<AudioBufferSourceNode> {
+  public async playAlarm(loop: boolean = false): Promise<void> {
     if (!this.audioContext) {
       throw new Error('Audio context not available');
     }
 
     try {
+      // Stop any existing alarm
+      this.stopAlarm();
+      
       const audioBuffer = await this.loadAudioFile('/sounds/alarm.mp3');
       const source = this.audioContext.createBufferSource();
       const gainNode = this.audioContext.createGain();
@@ -59,17 +63,20 @@ export class SoundService {
         source.loop = true;
       }
 
+      this.currentAlarmSource = source;
       source.start(0);
-      return source; // Return the source so it can be stopped later
     } catch (error) {
       console.error('Failed to play alarm sound:', error);
       throw error;
     }
   }
 
-  public stopAlarm(source: AudioBufferSourceNode): void {
+  public stopAlarm(): void {
     try {
-      source.stop();
+      if (this.currentAlarmSource) {
+        this.currentAlarmSource.stop();
+        this.currentAlarmSource = null;
+      }
     } catch (error) {
       console.error('Failed to stop alarm sound:', error);
     }

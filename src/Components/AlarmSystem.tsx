@@ -23,24 +23,15 @@ interface AlarmProviderProps {
 
 export const AlarmProvider = ({ children, childData = [] }: AlarmProviderProps) => {
   const [currentAlarm, setCurrentAlarm] = useState<Alarm | null>(null);
-  const [alarmSource, setAlarmSource] = useState<AudioBufferSourceNode | null>(null);
 
-  const triggerAlarm = useCallback(
-    async (type: string, child: Child) => {
-      setCurrentAlarm({ type, child });
-      try {
-        // Stop any existing alarm
-        if (alarmSource) {
-          soundService.stopAlarm(alarmSource);
-        }
-        const source = await soundService.playAlarm(true);
-        setAlarmSource(source);
-      } catch (error) {
-        console.error('Error playing alarm:', error);
-      }
-    },
-    [alarmSource]
-  );
+  const triggerAlarm = useCallback(async (type: string, child: Child) => {
+    setCurrentAlarm({ type, child });
+    try {
+      await soundService.playAlarm(true);
+    } catch (error) {
+      console.error('Error playing alarm:', error);
+    }
+  }, []);
 
   const checkAlarms = useCallback(() => {
     if (!childData || childData.length === 0) {
@@ -99,10 +90,7 @@ export const AlarmProvider = ({ children, childData = [] }: AlarmProviderProps) 
   }, [childData, currentAlarm, triggerAlarm]);
 
   const dismissAlarm = () => {
-    if (alarmSource) {
-      soundService.stopAlarm(alarmSource);
-      setAlarmSource(null);
-    }
+    soundService.stopAlarm();
     setCurrentAlarm(null);
   };
 
@@ -113,11 +101,9 @@ export const AlarmProvider = ({ children, childData = [] }: AlarmProviderProps) 
     return () => {
       clearInterval(interval);
       // Clean up any playing alarm when component unmounts
-      if (alarmSource) {
-        soundService.stopAlarm(alarmSource);
-      }
+      soundService.stopAlarm();
     };
-  }, [checkAlarms, alarmSource]);
+  }, [checkAlarms]);
 
   return (
     <AlarmContext.Provider

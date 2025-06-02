@@ -13,6 +13,7 @@ interface MockGainNode {
 interface MockBufferSource {
   connect: (destination: AudioNode) => void;
   start: (when?: number) => void;
+  stop: () => void;
   buffer: AudioBuffer | null;
   loop: boolean;
 }
@@ -56,6 +57,7 @@ describe('SoundService', () => {
     mockBufferSource = {
       connect: vi.fn(),
       start: vi.fn(),
+      stop: vi.fn(),
       buffer: null,
       loop: false,
     };
@@ -112,13 +114,12 @@ describe('SoundService', () => {
 
       mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
 
-      const source = await soundService.playAlarm(true);
+      await soundService.playAlarm(true);
 
       expect(mockBufferSource.connect).toHaveBeenCalledWith(mockGainNode);
       expect(mockGainNode.connect).toHaveBeenCalledWith(mockAudioContext.destination);
       expect(mockBufferSource.start).toHaveBeenCalledWith(0);
       expect(mockBufferSource.loop).toBe(true);
-      expect(source).toBe(mockBufferSource);
     });
 
     it('should use cached audio buffer on subsequent playAlarm calls', async () => {
@@ -142,27 +143,65 @@ describe('SoundService', () => {
     });
 
     it('should stop alarm sound', async () => {
-      const mockSource = {
-        stop: vi.fn(),
-      };
+      // First play an alarm to set up the current alarm source
+      const mockArrayBuffer = new ArrayBuffer(8);
+      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
 
-      soundService.stopAlarm(mockSource as unknown as AudioBufferSourceNode);
+      (window.fetch as Mock).mockResolvedValueOnce({
+        arrayBuffer: () => Promise.resolve(mockArrayBuffer),
+      });
+      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
 
-      expect(mockSource.stop).toHaveBeenCalled();
+      await soundService.playAlarm();
+      soundService.stopAlarm();
+
+      expect(mockBufferSource.stop).toHaveBeenCalled();
     });
 
     it('should handle errors when stopping alarm', async () => {
-      const mockSource = {
-        stop: vi.fn().mockImplementation(() => {
-          throw new Error('Stop failed');
-        }),
-      };
+      // First play an alarm to set up the current alarm source
+      const mockArrayBuffer = new ArrayBuffer(8);
+      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
+
+      (window.fetch as Mock).mockResolvedValueOnce({
+        arrayBuffer: () => Promise.resolve(mockArrayBuffer),
+      });
+      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
+
+      await soundService.playAlarm();
+      
+      // Mock the stop method to throw an error
+      mockBufferSource.stop = vi.fn().mockImplementation(() => {
+        throw new Error('Stop failed');
+      });
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      soundService.stopAlarm(mockSource as unknown as AudioBufferSourceNode);
+      soundService.stopAlarm();
 
       expect(consoleSpy).toHaveBeenCalledWith('Failed to stop alarm sound:', expect.any(Error));
       consoleSpy.mockRestore();
+    });
+
+    it('should stop existing alarm when playing a new one', async () => {
+      // First play an alarm
+      const mockArrayBuffer = new ArrayBuffer(8);
+      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
+
+      (window.fetch as Mock).mockResolvedValueOnce({
+        arrayBuffer: () => Promise.resolve(mockArrayBuffer),
+      });
+      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
+
+      await soundService.playAlarm();
+
+      // Reset mocks to verify new calls
+      vi.clearAllMocks();
+
+      // Play another alarm
+      await soundService.playAlarm();
+
+      // Verify the old alarm was stopped
+      expect(mockBufferSource.stop).toHaveBeenCalled();
     });
   });
 
