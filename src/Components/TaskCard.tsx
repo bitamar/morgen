@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Text, Flex, Box } from '@radix-ui/themes';
 import { Check } from 'lucide-react';
+import { soundService } from '../services/SoundService';
 
 interface Task {
   id: string;
@@ -24,7 +25,7 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
   const [isAnimating, setIsAnimating] = useState(false);
   const [celebrationEmoji, setCelebrationEmoji] = useState('');
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     if (disabled) return;
 
     if (!task.done) {
@@ -33,22 +34,7 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
       setCelebrationEmoji(randomEmoji);
       setIsAnimating(true);
 
-      // Play a simple beep sound
-      const AudioContext = window.AudioContext;
-      const audioContext = new AudioContext();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
+      await soundService.playTaskCompletion();
 
       setTimeout(() => {
         setIsAnimating(false);

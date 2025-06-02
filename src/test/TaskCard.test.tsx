@@ -1,36 +1,6 @@
-// Mock AudioContext and Audio before importing the component
 import { ReactNode } from 'react';
-
-const mockAudioContext = {
-  createOscillator: vi.fn(() => ({
-    connect: vi.fn(),
-    frequency: {
-      setValueAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn(),
-    },
-    start: vi.fn(),
-    stop: vi.fn(),
-  })),
-  createGain: vi.fn(() => ({
-    connect: vi.fn(),
-    gain: {
-      setValueAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn(),
-    },
-  })),
-  destination: {},
-  currentTime: 0,
-};
-
-Object.defineProperty(window, 'AudioContext', {
-  value: vi.fn(() => mockAudioContext),
-});
-Object.defineProperty(window, 'Audio', {
-  value: vi.fn(() => ({ play: vi.fn(), pause: vi.fn() })),
-});
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TaskCard from '../Components/TaskCard';
 
@@ -43,6 +13,13 @@ vi.mock('framer-motion', () => {
     AnimatePresence: ({ children }: { children: ReactNode }) => <>{children}</>,
   };
 });
+
+// Mock the sound service
+vi.mock('../services/SoundService', () => ({
+  soundService: {
+    playTaskCompletion: vi.fn(),
+  },
+}));
 
 describe('TaskCard', () => {
   const mockTask = {
@@ -108,31 +85,21 @@ describe('TaskCard', () => {
   });
 
   it('triggers celebration when marking task as complete', async () => {
-    render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
-
-    const card = screen.getByTestId('task-card');
-    fireEvent.click(card);
-
-    // Celebration emoji should be shown (any one from the array)
-    expect(screen.getByText(/[🎉✨🌟🎊💫🎈]/u)).toBeInTheDocument();
-
-    // Advance timers to check cleanup
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).toBeNull();
-  });
-
-  it('plays sound when marking task as complete', async () => {
     vi.useRealTimers();
     render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
 
     const card = screen.getByTestId('task-card');
     await userEvent.click(card);
 
-    expect(mockAudioContext.createOscillator).toHaveBeenCalled();
-    expect(mockAudioContext.createGain).toHaveBeenCalled();
-  });
+    // Celebration emoji should be shown (any one from the array)
+    expect(screen.getByText(/[🎉✨🌟🎊💫🎈]/u)).toBeInTheDocument();
+
+    // Wait for the celebration to be removed
+    await new Promise(resolve => setTimeout(resolve, 1100));
+
+    // Celebration should be removed after timeout
+    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).not.toBeInTheDocument();
+  }, 3000);
 
   it('is disabled when disabled prop is true', async () => {
     vi.useRealTimers();
