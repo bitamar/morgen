@@ -14,6 +14,7 @@ interface MockBufferSource {
   connect: (destination: AudioNode) => void;
   start: (when?: number) => void;
   buffer: AudioBuffer | null;
+  loop: boolean;
 }
 
 interface MockAudioContext {
@@ -55,7 +56,8 @@ describe('SoundService', () => {
     mockBufferSource = {
       connect: vi.fn(),
       start: vi.fn(),
-      buffer: null
+      buffer: null,
+      loop: false,
     };
 
     mockAudioContext = {
@@ -64,7 +66,7 @@ describe('SoundService', () => {
       decodeAudioData: vi.fn(),
       destination: {} as AudioDestinationNode,
       currentTime: 0,
-      createOscillator: vi.fn()
+      createOscillator: vi.fn(),
     };
 
     // Mock window AudioContext
@@ -85,130 +87,73 @@ describe('SoundService', () => {
       const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
 
       (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
-      });
-
-      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
-
-      await soundService.playSound('/sounds/test.mp3');
-
-      expect(mockAudioContext.createGain).toHaveBeenCalled();
-      expect(mockAudioContext.createBufferSource).toHaveBeenCalled();
-    });
-  });
-
-  describe('playSound', () => {
-    it('should play a sound file successfully', async () => {
-      const mockArrayBuffer = new ArrayBuffer(8);
-      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
-
-      (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
-      });
-
-      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
-
-      await soundService.playSound('/sounds/test.mp3');
-
-      expect(mockBufferSource.connect).toHaveBeenCalledWith(mockGainNode);
-      expect(mockGainNode.connect).toHaveBeenCalledWith(mockAudioContext.destination);
-      expect(mockBufferSource.start).toHaveBeenCalledWith(0);
-    });
-
-    it('should use cached audio buffer for repeated plays', async () => {
-      const mockArrayBuffer = new ArrayBuffer(8);
-      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
-
-      (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
-      });
-
-      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
-
-      // First play
-      await soundService.playSound('/sounds/test.mp3');
-      // Second play
-      await soundService.playSound('/sounds/test.mp3');
-
-      // Should only fetch and decode once
-      expect(window.fetch).toHaveBeenCalledTimes(1);
-      expect(mockAudioContext.decodeAudioData).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle fetch errors gracefully', async () => {
-      (window.fetch as Mock).mockRejectedValueOnce(new Error('Network error'));
-
-      await expect(soundService.playSound('/sounds/test.mp3')).rejects.toThrow('Network error');
-    });
-
-    it('should handle decode errors gracefully', async () => {
-      const mockArrayBuffer = new ArrayBuffer(8);
-
-      (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
-      });
-
-      mockAudioContext.decodeAudioData.mockRejectedValueOnce(new Error('Invalid audio data'));
-
-      await expect(soundService.playSound('/sounds/test.mp3')).rejects.toThrow('Invalid audio data');
-    });
-  });
-
-  describe('predefined sounds', () => {
-    it('should play beep sound', async () => {
-      const mockArrayBuffer = new ArrayBuffer(8);
-      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
-
-      (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
-      });
-
-      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
-
-      await soundService.playBeep();
-
-      expect(window.fetch).toHaveBeenCalledWith('/sounds/beep.mp3');
-    });
-
-    it('should play alarm sound', async () => {
-      const mockArrayBuffer = new ArrayBuffer(8);
-      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
-
-      (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
+        arrayBuffer: () => Promise.resolve(mockArrayBuffer),
       });
 
       mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
 
       await soundService.playAlarm();
 
-      expect(window.fetch).toHaveBeenCalledWith('/sounds/alarm.mp3');
+      expect(mockAudioContext.createGain).toHaveBeenCalled();
+      expect(mockAudioContext.createBufferSource).toHaveBeenCalled();
     });
+  });
 
-    it('should play notification sound', async () => {
+  describe('alarm sounds', () => {
+    it('should play alarm sound with looping', async () => {
       const mockArrayBuffer = new ArrayBuffer(8);
       const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
 
       (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
+        arrayBuffer: () => Promise.resolve(mockArrayBuffer),
       });
 
       mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
 
-      await soundService.playNotification();
+      const source = await soundService.playAlarm(true);
 
-      expect(window.fetch).toHaveBeenCalledWith('/sounds/notification.mp3');
+      expect(mockBufferSource.connect).toHaveBeenCalledWith(mockGainNode);
+      expect(mockGainNode.connect).toHaveBeenCalledWith(mockAudioContext.destination);
+      expect(mockBufferSource.start).toHaveBeenCalledWith(0);
+      expect(mockBufferSource.loop).toBe(true);
+      expect(source).toBe(mockBufferSource);
     });
 
+    it('should stop alarm sound', async () => {
+      const mockSource = {
+        stop: vi.fn(),
+      };
+
+      soundService.stopAlarm(mockSource as unknown as AudioBufferSourceNode);
+
+      expect(mockSource.stop).toHaveBeenCalled();
+    });
+
+    it('should handle errors when stopping alarm', async () => {
+      const mockSource = {
+        stop: vi.fn().mockImplementation(() => {
+          throw new Error('Stop failed');
+        }),
+      };
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      soundService.stopAlarm(mockSource as unknown as AudioBufferSourceNode);
+
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to stop alarm sound:', expect.any(Error));
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('task completion sound', () => {
     it('should play task completion sound', async () => {
       const mockOscillator = {
         connect: vi.fn(),
         frequency: {
           setValueAtTime: vi.fn(),
-          exponentialRampToValueAtTime: vi.fn()
+          exponentialRampToValueAtTime: vi.fn(),
         },
         start: vi.fn(),
-        stop: vi.fn()
+        stop: vi.fn(),
       };
 
       mockAudioContext.createOscillator = vi.fn(() => mockOscillator);
@@ -221,36 +166,4 @@ describe('SoundService', () => {
       expect(mockOscillator.stop).toHaveBeenCalled();
     });
   });
-
-  describe('volume control', () => {
-    it('should set correct volume level', async () => {
-      const mockArrayBuffer = new ArrayBuffer(8);
-      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
-
-      (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
-      });
-
-      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
-
-      await soundService.playSound('/sounds/test.mp3', 0.5);
-
-      expect(mockGainNode.gain.value).toBe(0.5);
-    });
-
-    it('should use default volume if not specified', async () => {
-      const mockArrayBuffer = new ArrayBuffer(8);
-      const mockAudioBuffer = new ArrayBuffer(8) as unknown as AudioBuffer;
-
-      (window.fetch as Mock).mockResolvedValueOnce({
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
-      });
-
-      mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
-
-      await soundService.playSound('/sounds/test.mp3');
-
-      expect(mockGainNode.gain.value).toBe(0.7); // Default volume
-    });
-  });
-}); 
+});

@@ -1,49 +1,18 @@
-// Mock AudioContext and Audio before importing the component
+vi.mock('../services/SoundService', () => ({
+  soundService: {
+    playAlarm: vi.fn().mockResolvedValue({
+      stop: vi.fn(),
+    }),
+    stopAlarm: vi.fn(),
+  },
+}));
+
 import { type AlarmContextType, useAlarm } from '../context/alarm.ts';
-
-const mockAudioContext = {
-  createOscillator: vi.fn(() => ({
-    connect: vi.fn(),
-    frequency: {
-      setValueAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn(),
-    },
-    start: vi.fn(),
-    stop: vi.fn(),
-  })),
-  createGain: vi.fn(() => ({
-    connect: vi.fn(),
-    gain: {
-      setValueAtTime: vi.fn(),
-      exponentialRampToValueAtTime: vi.fn(),
-    },
-  })),
-  destination: {},
-  currentTime: 0,
-  state: 'running',
-  resume: vi.fn().mockResolvedValue(undefined),
-};
-
-Object.defineProperty(window, 'AudioContext', {
-  value: vi.fn(() => mockAudioContext),
-});
-
-const mockAudio = {
-  play: vi.fn().mockResolvedValue(undefined),
-  pause: vi.fn(),
-  currentTime: 0,
-  loop: false,
-  volume: 1,
-};
-
-Object.defineProperty(window, 'Audio', {
-  value: vi.fn(() => mockAudio),
-});
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act, cleanup } from '@testing-library/react';
 import { AlarmProvider } from '../Components/AlarmSystem';
 import { useEffect } from 'react';
+import { soundService } from '../services/SoundService';
 
 // Configure test timeout
 vi.setConfig({ testTimeout: 10000 });
@@ -122,7 +91,7 @@ describe('AlarmSystem', () => {
     expect(screen.getByTestId('alarm-status').textContent).toBe('No alarm');
   });
 
-  it('triggers wake-up alarm at wake-up time', () => {
+  it('triggers wake-up alarm at wake-up time', async () => {
     // Set time to 7:00 AM
     vi.setSystemTime(new Date('2024-03-20T07:00:00'));
 
@@ -132,21 +101,16 @@ describe('AlarmSystem', () => {
       </AlarmProvider>
     );
 
-    // Simulate user interaction to initialize audio
-    act(() => {
-      document.dispatchEvent(new MouseEvent('click'));
-    });
-
     // Advance timers to trigger alarm check
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(1000);
     });
 
     expect(screen.getByTestId('alarm-status').textContent).toBe('wakeup alarm for Test Child');
-    expect(mockAudio.play).toHaveBeenCalled();
+    expect(soundService.playAlarm).toHaveBeenCalledWith(true);
   });
 
-  it('triggers bus warning 5 minutes before bus time', () => {
+  it('triggers bus warning 5 minutes before bus time', async () => {
     // Set time to 7:40 AM (5 minutes before 7:45)
     vi.setSystemTime(new Date('2024-03-20T07:40:00'));
 
@@ -156,21 +120,16 @@ describe('AlarmSystem', () => {
       </AlarmProvider>
     );
 
-    // Simulate user interaction to initialize audio
-    act(() => {
-      document.dispatchEvent(new MouseEvent('click'));
-    });
-
     // Advance timers to trigger alarm check
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(1000);
     });
 
     expect(screen.getByTestId('alarm-status').textContent).toBe('warning alarm for Test Child');
-    expect(mockAudio.play).toHaveBeenCalled();
+    expect(soundService.playAlarm).toHaveBeenCalledWith(true);
   });
 
-  it('triggers bus departure alarm at bus time with incomplete tasks', () => {
+  it('triggers bus departure alarm at bus time with incomplete tasks', async () => {
     // Set time to 7:45 AM
     vi.setSystemTime(new Date('2024-03-20T07:45:00'));
 
@@ -180,24 +139,16 @@ describe('AlarmSystem', () => {
       </AlarmProvider>
     );
 
-    // Simulate user interaction to initialize audio
-    act(() => {
-      document.dispatchEvent(new MouseEvent('click'));
-    });
-
     // Advance timers to trigger alarm check
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(1000);
     });
 
     expect(screen.getByTestId('alarm-status').textContent).toBe('departure alarm for Test Child');
-    expect(mockAudio.play).toHaveBeenCalled();
+    expect(soundService.playAlarm).toHaveBeenCalledWith(true);
   });
 
   it('dismisses alarm when dismiss button is clicked', async () => {
-    // Set time to a non-alarm time first (6:00 AM)
-    vi.setSystemTime(new Date('2024-03-20T06:00:00'));
-
     let alarmContext: AlarmContextType | undefined;
 
     render(
@@ -213,11 +164,6 @@ describe('AlarmSystem', () => {
     if (!alarmContext) {
       throw new Error('Alarm context not initialized');
     }
-
-    // Initialize audio
-    await act(async () => {
-      document.dispatchEvent(new MouseEvent('click'));
-    });
 
     // Set up an alarm to dismiss
     await act(async () => {
@@ -233,24 +179,12 @@ describe('AlarmSystem', () => {
     const alarmStatus = screen.getByTestId('alarm-status');
     expect(alarmStatus).toBeInTheDocument();
     expect(alarmStatus).toHaveTextContent('No alarm');
+    expect(soundService.stopAlarm).toHaveBeenCalled();
   });
 
-  it('initializes with no alarm', () => {
-    render(
-      <AlarmProvider childData={mockChildData}>
-        <TestComponent />
-      </AlarmProvider>
-    );
-
-    const alarmStatus = screen.getByTestId('alarm-status');
-    expect(alarmStatus).toBeInTheDocument();
-    expect(alarmStatus).toHaveTextContent('No alarm');
-  });
-
-  it('triggers alarm with correct audio', async () => {
+  it('stops alarm when component unmounts', async () => {
     let alarmContext: AlarmContextType | undefined;
-
-    render(
+    const { unmount } = render(
       <AlarmProvider childData={mockChildData}>
         <TestComponent
           onMount={context => {
@@ -260,24 +194,21 @@ describe('AlarmSystem', () => {
       </AlarmProvider>
     );
 
-    if (!alarmContext) {
-      throw new Error('Alarm context not initialized');
-    }
+    if (!alarmContext) throw new Error('Alarm context not initialized');
 
-    // Initialize audio
-    await act(async () => {
-      document.dispatchEvent(new MouseEvent('click'));
-    });
-
-    // Trigger alarm
+    // Directly trigger the alarm
     await act(async () => {
       alarmContext?.triggerAlarm('wakeup', { id: '1', name: 'Test Child' });
     });
 
-    // Verify alarm is triggered
-    const alarmStatus = screen.getByTestId('alarm-status');
-    expect(alarmStatus).toBeInTheDocument();
-    expect(alarmStatus).toHaveTextContent('wakeup alarm for Test Child');
-    expect(mockAudio.play).toHaveBeenCalledTimes(1);
+    // Assert alarm is active
+    expect(screen.getByTestId('alarm-status').textContent).toBe('wakeup alarm for Test Child');
+    expect(soundService.playAlarm).toHaveBeenCalledWith(true);
+
+    // Unmount the component
+    unmount();
+
+    // Verify alarm is stopped
+    expect(soundService.stopAlarm).toHaveBeenCalled();
   });
 });

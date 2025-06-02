@@ -44,7 +44,7 @@ export class SoundService {
     }
   }
 
-  public async playSound(url: string, volume: number = 0.7): Promise<void> {
+  public async playAlarm(loop: boolean = false): Promise<AudioBufferSourceNode> {
     if (!this.audioContext) {
       await this.initializeAudioContext();
     }
@@ -54,33 +54,34 @@ export class SoundService {
     }
 
     try {
-      const audioBuffer = await this.loadAudioFile(url);
+      const audioBuffer = await this.loadAudioFile('/sounds/alarm.mp3');
       const source = this.audioContext.createBufferSource();
       const gainNode = this.audioContext.createGain();
 
       source.buffer = audioBuffer;
-      gainNode.gain.value = volume;
+      gainNode.gain.value = 0.8;
 
       source.connect(gainNode);
       gainNode.connect(this.audioContext.destination);
 
+      if (loop) {
+        source.loop = true;
+      }
+
       source.start(0);
+      return source; // Return the source so it can be stopped later
     } catch (error) {
-      console.error('Failed to play sound:', error);
+      console.error('Failed to play alarm sound:', error);
       throw error;
     }
   }
 
-  public async playBeep(): Promise<void> {
-    await this.playSound('/sounds/beep.mp3');
-  }
-
-  public async playAlarm(): Promise<void> {
-    await this.playSound('/sounds/alarm.mp3');
-  }
-
-  public async playNotification(): Promise<void> {
-    await this.playSound('/sounds/notification.mp3');
+  public stopAlarm(source: AudioBufferSourceNode): void {
+    try {
+      source.stop();
+    } catch (error) {
+      console.error('Failed to stop alarm sound:', error);
+    }
   }
 
   public async playTaskCompletion(): Promise<void> {
