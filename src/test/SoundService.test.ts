@@ -104,6 +104,7 @@ describe('SoundService', () => {
     });
 
     it('should throw error when audio context initialization fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const mockError = new Error('AudioContext not supported');
       window.AudioContext = vi.fn(() => {
         throw mockError;
@@ -111,6 +112,7 @@ describe('SoundService', () => {
 
       const newSoundService = new SoundService();
       await expect(newSoundService.initializeAudioContext()).rejects.toThrow('AudioContext not supported');
+      consoleSpy.mockRestore();
     });
   });
 

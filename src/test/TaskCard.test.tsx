@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TaskCard from '../Components/TaskCard';
 
@@ -95,7 +95,9 @@ describe('TaskCard', () => {
     expect(screen.getByText(/[🎉✨🌟🎊💫🎈]/u)).toBeInTheDocument();
 
     // Wait for the celebration to be removed
-    await new Promise(resolve => setTimeout(resolve, 1100));
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 1100));
+    });
 
     // Celebration should be removed after timeout
     expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).not.toBeInTheDocument();
