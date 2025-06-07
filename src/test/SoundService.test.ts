@@ -96,10 +96,21 @@ describe('SoundService', () => {
 
       mockAudioContext.decodeAudioData.mockResolvedValueOnce(mockAudioBuffer);
 
+      await soundService.initializeAudioContext();
       await soundService.playAlarm();
 
       expect(mockAudioContext.createGain).toHaveBeenCalled();
       expect(mockAudioContext.createBufferSource).toHaveBeenCalled();
+    });
+
+    it('should throw error when audio context initialization fails', async () => {
+      const mockError = new Error('AudioContext not supported');
+      window.AudioContext = vi.fn(() => {
+        throw mockError;
+      }) as unknown as typeof AudioContext;
+
+      const newSoundService = new SoundService();
+      await expect(newSoundService.initializeAudioContext()).rejects.toThrow('AudioContext not supported');
     });
   });
 
@@ -229,23 +240,6 @@ describe('SoundService', () => {
   });
 
   describe('error handling', () => {
-    it('should handle audio context initialization failure', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const mockError = new Error('AudioContext not supported');
-
-      // Mock AudioContext constructor to throw
-      window.AudioContext = vi.fn(() => {
-        throw mockError;
-      }) as unknown as typeof AudioContext;
-
-      // Create a new instance to ensure clean state
-      const newSoundService = new SoundService();
-      await newSoundService.playTaskCompletion();
-
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to initialize audio context:', mockError);
-      consoleSpy.mockRestore();
-    });
-
     it('should handle audio file loading failure', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const mockError = new Error('Network error');
@@ -325,7 +319,7 @@ describe('SoundService', () => {
       // @ts-expect-error - Force audioContext to be null
       newSoundService.audioContext = null;
 
-      await expect(newSoundService['loadAudioFile']('/sounds/alarm.mp3')).rejects.toThrow(
+      await expect(newSoundService['loadAudioFile']('/morgen/sounds/alarm.mp3')).rejects.toThrow(
         'Audio context not available'
       );
     });

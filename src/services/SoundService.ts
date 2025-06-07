@@ -8,7 +8,7 @@ export class SoundService {
     this.initializeAudioContext = this.initializeAudioContext.bind(this);
   }
 
-  private async initializeAudioContext(): Promise<void> {
+  public async initializeAudioContext(): Promise<void> {
     if (this.isInitialized) return;
 
     try {
@@ -16,6 +16,7 @@ export class SoundService {
       this.isInitialized = true;
     } catch (error) {
       console.error('Failed to initialize audio context:', error);
+      throw error;
     }
   }
 
@@ -49,7 +50,7 @@ export class SoundService {
       // Stop any existing alarm
       this.stopAlarm();
       
-      const audioBuffer = await this.loadAudioFile('/sounds/alarm.mp3');
+      const audioBuffer = await this.loadAudioFile('/morgen/sounds/alarm.mp3');
       const source = this.audioContext.createBufferSource();
       const gainNode = this.audioContext.createGain();
 

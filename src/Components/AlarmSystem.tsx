@@ -23,18 +23,22 @@ interface AlarmProviderProps {
 
 export const AlarmProvider = ({ children, childData = [] }: AlarmProviderProps) => {
   const [currentAlarm, setCurrentAlarm] = useState<Alarm | null>(null);
+  const [isCooldown, setIsCooldown] = useState(false);
 
   const triggerAlarm = useCallback(async (type: string, child: Child) => {
+    if (isCooldown) return;
     setCurrentAlarm({ type, child });
     try {
+      // Initialize audio context before playing alarm
+      await soundService.initializeAudioContext();
       await soundService.playAlarm(true);
     } catch (error) {
       console.error('Error playing alarm:', error);
     }
-  }, []);
+  }, [isCooldown]);
 
   const checkAlarms = useCallback(() => {
-    if (!childData || childData.length === 0) {
+    if (!childData || childData.length === 0 || isCooldown) {
       return;
     }
 
@@ -87,11 +91,14 @@ export const AlarmProvider = ({ children, childData = [] }: AlarmProviderProps) 
         triggerAlarm(alarmToPlay.type, alarmToPlay.child);
       }
     }
-  }, [childData, currentAlarm, triggerAlarm]);
+  }, [childData, currentAlarm, triggerAlarm, isCooldown]);
 
   const dismissAlarm = () => {
     soundService.stopAlarm();
     setCurrentAlarm(null);
+    setIsCooldown(true);
+    // Reset cooldown after 1 minute
+    setTimeout(() => setIsCooldown(false), 60000);
   };
 
   useEffect(() => {

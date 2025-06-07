@@ -2,6 +2,7 @@ vi.mock('../services/SoundService', () => ({
   soundService: {
     playAlarm: vi.fn().mockResolvedValue(undefined),
     stopAlarm: vi.fn(),
+    initializeAudioContext: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
