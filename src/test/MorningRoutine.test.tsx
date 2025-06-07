@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, MockInstance } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 vi.mock('../services/peopleStorage', () => ({
@@ -49,6 +49,17 @@ describe('MorningRoutine', () => {
     });
   });
 
+  it('shows loading screen when no children are available', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue([]);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    expect(screen.getByText('Loading Morning Routine...')).toBeInTheDocument();
+    expect(screen.getByText('Setting up your day!')).toBeInTheDocument();
+    expect(screen.getByText('🌅')).toBeInTheDocument();
+  });
+
   it('navigates to next child when next button is clicked', async () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
@@ -64,6 +75,133 @@ describe('MorningRoutine', () => {
 
     // Verify next child (Alex) is shown
     expect(await screen.findByText(/Alex/i)).toBeInTheDocument();
+  });
+
+  it('navigates when clicking on navigation dots', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    // Verify initial child (Maya) is shown
+    expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
+
+    // Click on second dot to navigate to Alex
+    const dots = document.querySelectorAll('.w-3.h-3.rounded-full');
+    await userEvent.click(dots[1]);
+
+    // Verify second child (Alex) is shown
+    expect(await screen.findByText(/Alex/i)).toBeInTheDocument();
+  });
+
+  it('handles touch swipe right to go to next child', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
+    
+    // Verify initial child (Maya) is shown
+    expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
+
+    // Simulate swipe right (start at x=100, end at x=0 - swipe distance > 50)
+    fireEvent.touchStart(container, {
+      targetTouches: [{ clientX: 100 }],
+    });
+    fireEvent.touchMove(container, {
+      targetTouches: [{ clientX: 0 }],
+    });
+    fireEvent.touchEnd(container);
+
+    // Should navigate to next child
+    expect(await screen.findByText(/Alex/i)).toBeInTheDocument();
+  });
+
+  it('ignores swipe when distance is too small', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
+    
+    // Verify initial child (Maya) is shown
+    expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
+
+    // Simulate small swipe (distance < 50)
+    fireEvent.touchStart(container, {
+      targetTouches: [{ clientX: 25 }],
+    });
+    fireEvent.touchMove(container, {
+      targetTouches: [{ clientX: 0 }],
+    });
+    fireEvent.touchEnd(container);
+
+    // Should still be on Maya
+    expect(screen.getByText(/Maya/i)).toBeInTheDocument();
+  });
+
+  it('ignores swipe when only one child exists', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue([defaultChildren[0]]);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
+    
+    // Verify Maya is shown
+    expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
+
+    // Simulate swipe
+    fireEvent.touchStart(container, {
+      targetTouches: [{ clientX: 100 }],
+    });
+    fireEvent.touchMove(container, {
+      targetTouches: [{ clientX: 0 }],
+    });
+    fireEvent.touchEnd(container);
+
+    // Should still be on Maya (no navigation when only one child)
+    expect(screen.getByText(/Maya/i)).toBeInTheDocument();
+  });
+
+  it('ignores touch events when child manager is open', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    // Open child manager
+    const usersButton = document.querySelector('.fixed.bottom-4.right-4 button')!;
+    await userEvent.click(usersButton);
+
+    const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
+    
+    // Try to swipe while child manager is open
+    fireEvent.touchStart(container, {
+      targetTouches: [{ clientX: 100 }],
+    });
+    fireEvent.touchMove(container, {
+      targetTouches: [{ clientX: 0 }],
+    });
+    fireEvent.touchEnd(container);
+
+    // Should ignore swipe
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('opens edit mode when settings button is clicked', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    const settingsButton = screen.getByRole('button', { name: 'Settings' });
+    await userEvent.click(settingsButton);
+
+    // Edit mode should open - check for edit form elements
+    expect(screen.getByDisplayValue('Maya')).toBeInTheDocument();
   });
 
   it('opens the child-manager modal when the users button is clicked', async () => {
@@ -91,5 +229,17 @@ describe('MorningRoutine', () => {
       const saved = (childrenService.saveChildren as unknown as MockInstance).mock.calls[0][0];
       expect(saved[0].tasks[0].done).toBe(true);
     });
+  });
+
+  it('does not show navigation when there is only one child', async () => {
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue([defaultChildren[0]]);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    render(<MorningRoutine />);
+
+    // Navigation buttons and dots should not be visible
+    expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /previous/i })).not.toBeInTheDocument();
+    expect(document.querySelectorAll('.w-3.h-3.rounded-full')).toHaveLength(0);
   });
 });
