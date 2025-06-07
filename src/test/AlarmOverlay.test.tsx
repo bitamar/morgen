@@ -130,6 +130,7 @@ describe('AlarmOverlay', () => {
           child: mockChild,
         },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
     });
 
@@ -183,6 +184,7 @@ describe('AlarmOverlay', () => {
           child: mockChild,
         },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
     });
 
@@ -207,12 +209,13 @@ describe('AlarmOverlay', () => {
   describe('alarm icons', () => {
     it('renders alarm clock icon for wakeup', () => {
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'wakeup', child: mockChild, time: new Date() },
+        currentAlarm: { type: 'wakeup', child: mockChild },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       render(<AlarmOverlay />);
-      
+
       // Check for lucide alarm clock icon
       const icon = document.querySelector('.lucide-alarm-clock');
       expect(icon).toBeInTheDocument();
@@ -220,24 +223,26 @@ describe('AlarmOverlay', () => {
 
     it('renders clock icon for warning', () => {
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'warning', child: mockChild, time: new Date() },
+        currentAlarm: { type: 'warning', child: mockChild },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       render(<AlarmOverlay />);
-      
+
       const icon = document.querySelector('.lucide-clock');
       expect(icon).toBeInTheDocument();
     });
 
     it('renders bus icon for departure', () => {
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'departure', child: mockChild, time: new Date() },
+        currentAlarm: { type: 'departure', child: mockChild },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       render(<AlarmOverlay />);
-      
+
       const icon = document.querySelector('.lucide-bus');
       expect(icon).toBeInTheDocument();
     });
@@ -251,8 +256,9 @@ describe('AlarmOverlay', () => {
 
       // Test wakeup
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'wakeup', child: childWithDifferentName, time: new Date() },
+        currentAlarm: { type: 'wakeup', child: childWithDifferentName },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       const { rerender } = render(<AlarmOverlay />);
@@ -260,8 +266,9 @@ describe('AlarmOverlay', () => {
 
       // Test warning
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'warning', child: childWithDifferentName, time: new Date() },
+        currentAlarm: { type: 'warning', child: childWithDifferentName },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       rerender(<AlarmOverlay />);
@@ -269,8 +276,9 @@ describe('AlarmOverlay', () => {
 
       // Test departure
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'departure', child: childWithDifferentName, time: new Date() },
+        currentAlarm: { type: 'departure', child: childWithDifferentName },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       rerender(<AlarmOverlay />);
@@ -281,26 +289,28 @@ describe('AlarmOverlay', () => {
   describe('accessibility', () => {
     it('includes helpful text for users', () => {
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'wakeup', child: mockChild, time: new Date() },
+        currentAlarm: { type: 'wakeup', child: mockChild },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       render(<AlarmOverlay />);
-      
+
       expect(screen.getByText('Tap the button to dismiss this alert.')).toBeInTheDocument();
     });
 
     it('button is clickable and has proper text', () => {
       mockUseAlarm.mockReturnValue({
-        currentAlarm: { type: 'wakeup', child: mockChild, time: new Date() },
+        currentAlarm: { type: 'wakeup', child: mockChild },
         dismissAlarm: mockDismissAlarm,
+        triggerAlarm: mockTriggerAlarm,
       });
 
       render(<AlarmOverlay />);
-      
+
       const button = screen.getByRole('button', { name: 'Start My Day' });
       expect(button).toBeInTheDocument();
       expect(button).toBeEnabled();
     });
   });
-}); 
+});
