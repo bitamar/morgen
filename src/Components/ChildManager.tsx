@@ -18,13 +18,13 @@ interface Child {
 }
 
 interface ChildManagerProps {
-  children: Child[];
+  childList: Child[];
   onSave: (children: Child[]) => void;
   onClose: () => void;
 }
 
-export default function ChildManager({ children, onSave, onClose }: ChildManagerProps) {
-  const [editedChildren, setEditedChildren] = useState<Child[]>(children);
+export default function ChildManager({ childList, onSave, onClose }: ChildManagerProps) {
+  const [editedChildren, setEditedChildren] = useState<Child[]>(childList);
 
   const addChild = () => {
     const newChild: Child = {
