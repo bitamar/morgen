@@ -1,11 +1,50 @@
 import { describe, it, expect, vi, beforeEach, MockInstance } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 
 vi.mock('../services/peopleStorage', () => ({
   loadChildren: vi.fn(),
   saveChildren: vi.fn(),
 }));
+
+vi.mock('framer-motion', () => {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  return {
+    motion: {
+      div: ({ children, ...props }: { children: React.ReactNode; [_key: string]: unknown }) => {
+        // Remove framer-motion specific props but keep HTML attributes
+        const {
+          initial,
+          animate,
+          exit,
+          transition,
+          whileHover,
+          whileTap,
+          whileInView,
+          ...htmlProps
+        } = props;
+        return <div {...htmlProps}>{children}</div>;
+      },
+      button: ({ children, ...props }: { children: React.ReactNode; [_key: string]: unknown }) => {
+        // Remove framer-motion specific props but keep HTML attributes
+        const {
+          initial,
+          animate,
+          exit,
+          transition,
+          whileHover,
+          whileTap,
+          whileInView,
+          ...htmlProps
+        } = props;
+        return <button {...htmlProps}>{children}</button>;
+      },
+    },
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
 import * as childrenService from '../services/peopleStorage';
 
 const defaultChildren = [
@@ -101,7 +140,7 @@ describe('MorningRoutine', () => {
     render(<MorningRoutine />);
 
     const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
-    
+
     // Verify initial child (Maya) is shown
     expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
 
@@ -125,7 +164,7 @@ describe('MorningRoutine', () => {
     render(<MorningRoutine />);
 
     const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
-    
+
     // Verify initial child (Maya) is shown
     expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
 
@@ -149,7 +188,7 @@ describe('MorningRoutine', () => {
     render(<MorningRoutine />);
 
     const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
-    
+
     // Verify Maya is shown
     expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
 
@@ -177,7 +216,7 @@ describe('MorningRoutine', () => {
     await userEvent.click(usersButton);
 
     const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
-    
+
     // Try to swipe while child manager is open
     fireEvent.touchStart(container, {
       targetTouches: [{ clientX: 100 }],
