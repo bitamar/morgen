@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 export interface LanguageContextType {
   currentLanguage: string;
   setLanguage: (language: string) => void;
-  getLanguageInfo: () => { code: string; name: string; flag: string };
+  getLanguageInfo: () => { code: string; name: string; flag: string; direction: 'ltr' | 'rtl' };
 }
 
 export const LanguageContext = createContext<LanguageContextType | null>(null);

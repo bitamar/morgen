@@ -8,19 +8,17 @@ export interface LanguageSettings {
 export const DEFAULT_LANGUAGE = 'en';
 
 export const SUPPORTED_LANGUAGES = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'he', name: 'עברית', flag: '🇮🇱' },
+  { code: 'en', name: 'English', flag: '🇺🇸', direction: 'ltr' as const },
+  { code: 'he', name: 'עברית', flag: '🇮🇱', direction: 'rtl' as const },
 ];
 
-/** Load language settings from localStorage with safe fallbacks */
 export function loadLanguageSettings(): string {
   try {
     const raw = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (!raw) return DEFAULT_LANGUAGE;
 
     const parsed: LanguageSettings = JSON.parse(raw);
-    if (parsed.language && typeof parsed.language === 'string') {
-      // Validate that the language is supported
+    if (parsed.language) {
       const isSupported = SUPPORTED_LANGUAGES.some(lang => lang.code === parsed.language);
       return isSupported ? parsed.language : DEFAULT_LANGUAGE;
     }

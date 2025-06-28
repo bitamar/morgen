@@ -11,8 +11,8 @@ vi.mock('../services/languageStorage', () => ({
   saveLanguageSettings: vi.fn(),
   getLanguageInfo: vi.fn(),
   SUPPORTED_LANGUAGES: [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'he', name: 'עברית', flag: '🇮🇱' },
+    { code: 'en', name: 'English', flag: '🇺🇸', direction: 'ltr' },
+    { code: 'he', name: 'עברית', flag: '🇮🇱', direction: 'rtl' },
   ],
 }));
 
@@ -65,8 +65,8 @@ beforeEach(() => {
   vi.mocked(languageStorage.loadLanguageSettings).mockReturnValue('en');
   vi.mocked(languageStorage.getLanguageInfo).mockImplementation(code => {
     const languages = [
-      { code: 'en', name: 'English', flag: '🇺🇸' },
-      { code: 'he', name: 'עברית', flag: '🇮🇱' },
+      { code: 'en', name: 'English', flag: '🇺🇸', direction: 'ltr' as const },
+      { code: 'he', name: 'עברית', flag: '🇮🇱', direction: 'rtl' as const },
     ];
     return languages.find(lang => lang.code === code) || languages[0];
   });
@@ -179,8 +179,8 @@ describe('LanguageSelector', () => {
     let currentLanguage = 'en';
     vi.mocked(languageStorage.getLanguageInfo).mockImplementation(code => {
       const languages = [
-        { code: 'en', name: 'English', flag: '🇺🇸' },
-        { code: 'he', name: 'עברית', flag: '🇮🇱' },
+        { code: 'en', name: 'English', flag: '🇺🇸', direction: 'ltr' as const },
+        { code: 'he', name: 'עברית', flag: '🇮🇱', direction: 'rtl' as const },
       ];
       return languages.find(lang => lang.code === (code || currentLanguage)) || languages[0];
     });

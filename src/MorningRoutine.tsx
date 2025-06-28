@@ -9,10 +9,14 @@ import EditMode from './Components/EditMode';
 import ChildManager from './Components/ChildManager';
 import { LanguageSelector } from './Components/LanguageSelector';
 import { useTranslation } from './hooks/useTranslation';
+import { useLanguage } from './context/language';
 import { type Child, loadChildren, saveChildren } from './services/peopleStorage.ts';
 
 export default function MorningRoutine() {
   const { t } = useTranslation();
+  const { getLanguageInfo } = useLanguage();
+  const languageInfo = getLanguageInfo();
+  const isRTL = languageInfo.direction === 'rtl';
   const [children, setChildren] = useState<Child[]>(() => loadChildren());
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
   const [editMode, setEditMode] = useState<Child | null>(null); // modal – single child
@@ -99,7 +103,7 @@ export default function MorningRoutine() {
                 className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg"
                 aria-label={t('previousChild')}
               >
-                <ChevronLeft className="w-5 h-5" />
+                {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
               </Button>
 
               <div className="flex gap-2">
@@ -121,7 +125,7 @@ export default function MorningRoutine() {
                 className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg"
                 aria-label={t('nextChild')}
               >
-                <ChevronRight className="w-5 h-5" />
+                {isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
               </Button>
             </div>
           </div>

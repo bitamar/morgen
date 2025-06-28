@@ -52,8 +52,8 @@ beforeEach(() => {
   // Setup default mocks
   vi.mocked(languageStorage.getLanguageInfo).mockImplementation(code => {
     const languages = [
-      { code: 'en', name: 'English', flag: '🇺🇸' },
-      { code: 'he', name: 'עברית', flag: '🇮🇱' },
+      { code: 'en', name: 'English', flag: '🇺🇸', direction: 'ltr' as const },
+      { code: 'he', name: 'עברית', flag: '🇮🇱', direction: 'rtl' as const },
     ];
     return languages.find(lang => lang.code === code) || languages[0];
   });

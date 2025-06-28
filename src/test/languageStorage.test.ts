@@ -41,11 +41,13 @@ describe('languageStorage', () => {
         code: 'en',
         name: 'English',
         flag: '🇺🇸',
+        direction: 'ltr',
       });
       expect(SUPPORTED_LANGUAGES[1]).toEqual({
         code: 'he',
         name: 'עברית',
         flag: '🇮🇱',
+        direction: 'rtl',
       });
     });
   });
@@ -185,6 +187,7 @@ describe('languageStorage', () => {
         code: 'en',
         name: 'English',
         flag: '🇺🇸',
+        direction: 'ltr',
       });
     });
 
@@ -195,6 +198,7 @@ describe('languageStorage', () => {
         code: 'he',
         name: 'עברית',
         flag: '🇮🇱',
+        direction: 'rtl',
       });
     });
 
@@ -205,6 +209,7 @@ describe('languageStorage', () => {
         code: 'en',
         name: 'English',
         flag: '🇺🇸',
+        direction: 'ltr',
       });
     });
 
@@ -215,6 +220,7 @@ describe('languageStorage', () => {
         code: 'en',
         name: 'English',
         flag: '🇺🇸',
+        direction: 'ltr',
       });
     });
   });

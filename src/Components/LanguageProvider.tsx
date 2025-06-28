@@ -15,6 +15,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   useEffect(() => {
     saveLanguageSettings(currentLanguage);
+
+    // Apply direction to HTML element
+    const languageInfo = getLanguageInfo(currentLanguage);
+    document.documentElement.dir = languageInfo.direction;
+    document.documentElement.lang = currentLanguage;
   }, [currentLanguage]);
 
   const setLanguage = (language: string) => {

@@ -45,6 +45,7 @@ beforeEach(() => {
     code: 'en',
     name: 'English',
     flag: '🇺🇸',
+    direction: 'ltr',
   });
 });
 
@@ -55,6 +56,7 @@ describe('LanguageProvider', () => {
       code: 'he',
       name: 'עברית',
       flag: '🇮🇱',
+      direction: 'rtl',
     });
 
     render(
@@ -121,6 +123,7 @@ describe('LanguageProvider', () => {
       code: 'en',
       name: 'English',
       flag: '🇺🇸',
+      direction: 'ltr' as const,
     };
 
     vi.mocked(languageStorage.getLanguageInfo).mockReturnValue(mockLanguageInfo);
@@ -159,6 +162,46 @@ describe('LanguageProvider', () => {
     });
 
     expect(languageStorage.saveLanguageSettings).toHaveBeenCalledWith('he');
+  });
+
+  it('sets HTML element dir and lang attributes correctly', () => {
+    // Mock language info to return correct info based on language code
+    vi.mocked(languageStorage.getLanguageInfo).mockImplementation(code => {
+      if (code === 'he') {
+        return {
+          code: 'he',
+          name: 'עברית',
+          flag: '🇮🇱',
+          direction: 'rtl',
+        };
+      }
+      return {
+        code: 'en',
+        name: 'English',
+        flag: '🇺🇸',
+        direction: 'ltr',
+      };
+    });
+
+    // Initial render with English
+    render(
+      <LanguageProvider>
+        <TestComponent />
+      </LanguageProvider>
+    );
+
+    // Check initial HTML attributes
+    expect(document.documentElement.dir).toBe('ltr');
+    expect(document.documentElement.lang).toBe('en');
+
+    // Change language to Hebrew
+    act(() => {
+      screen.getByTestId('change-language').click();
+    });
+
+    // Check updated HTML attributes
+    expect(document.documentElement.dir).toBe('rtl');
+    expect(document.documentElement.lang).toBe('he');
   });
 });
 

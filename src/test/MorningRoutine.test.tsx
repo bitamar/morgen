@@ -319,4 +319,43 @@ describe('MorningRoutine', () => {
     expect(screen.queryByRole('button', { name: /previous/i })).not.toBeInTheDocument();
     expect(document.querySelectorAll('.w-3.h-3.rounded-full')).toHaveLength(0);
   });
+
+  it('displays correct arrow direction for RTL languages', async () => {
+    // Mock language storage to return Hebrew with RTL direction
+    const languageStorage = await import('../services/languageStorage');
+    vi.spyOn(languageStorage, 'loadLanguageSettings').mockReturnValue('he');
+    vi.spyOn(languageStorage, 'getLanguageInfo').mockReturnValue({
+      code: 'he',
+      name: 'עברית',
+      flag: '🇮🇱',
+      direction: 'rtl',
+    });
+
+    (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
+    const MorningRoutine = (await import('../MorningRoutine')).default;
+
+    renderWithProviders(<MorningRoutine />);
+
+    // Wait for component to render
+    await screen.findByText(/Maya/i);
+
+    // Get the navigation buttons using Hebrew labels
+    const prevButton = screen.getByRole('button', { name: 'ילד קודם' }); // Previous child in Hebrew
+    const nextButton = screen.getByRole('button', { name: 'ילד הבא' }); // Next child in Hebrew
+
+    // In RTL mode:
+    // - Previous button should have ChevronRight (pointing right)
+    // - Next button should have ChevronLeft (pointing left)
+
+    // Check that the buttons exist and are properly labeled in Hebrew
+    expect(prevButton).toBeInTheDocument();
+    expect(nextButton).toBeInTheDocument();
+
+    // Verify the arrows are flipped for RTL by checking the SVG classes
+    const prevButtonChevron = prevButton.querySelector('svg');
+    const nextButtonChevron = nextButton.querySelector('svg');
+
+    expect(prevButtonChevron).toHaveClass('lucide-chevron-right'); // Previous points right in RTL
+    expect(nextButtonChevron).toHaveClass('lucide-chevron-left'); // Next points left in RTL
+  });
 });
