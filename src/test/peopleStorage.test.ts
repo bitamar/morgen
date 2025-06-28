@@ -15,9 +15,6 @@ const localStorageMock = {
   clear: vi.fn(),
 };
 
-// Mock console.error to avoid noise in tests
-const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
 beforeEach(() => {
   vi.clearAllMocks();
   Object.defineProperty(window, 'localStorage', {
@@ -136,15 +133,21 @@ describe('peopleStorage', () => {
     });
 
     it('handles JSON parse errors gracefully', () => {
+      const silentErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       localStorageMock.getItem.mockReturnValue('invalid-json{');
 
       const children = loadChildren();
 
       expect(children).toEqual(getDefaultChildren());
-      expect(consoleErrorSpy).toHaveBeenCalledWith('loadChildren:', expect.any(SyntaxError));
+      expect(silentErrorSpy).toHaveBeenCalledWith('loadChildren:', expect.any(SyntaxError));
+
+      silentErrorSpy.mockRestore();
     });
 
     it('handles localStorage access errors gracefully', () => {
+      const silentErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       localStorageMock.getItem.mockImplementation(() => {
         throw new Error('localStorage access denied');
       });
@@ -152,7 +155,10 @@ describe('peopleStorage', () => {
       const children = loadChildren();
 
       expect(children).toEqual(getDefaultChildren());
-      expect(consoleErrorSpy).toHaveBeenCalledWith('loadChildren:', expect.any(Error));
+      expect(silentErrorSpy).toHaveBeenCalledWith('loadChildren:', expect.any(Error));
+
+      silentErrorSpy.mockRestore();
+      localStorageMock.getItem.mockReset();
     });
   });
 
@@ -185,6 +191,8 @@ describe('peopleStorage', () => {
     });
 
     it('handles localStorage setItem errors gracefully', () => {
+      const silentErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       const testChildren: Child[] = getDefaultChildren();
 
       localStorageMock.setItem.mockImplementation(() => {
@@ -194,7 +202,10 @@ describe('peopleStorage', () => {
       // Should not throw
       expect(() => saveChildren(testChildren)).not.toThrow();
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('saveChildren:', expect.any(Error));
+      expect(silentErrorSpy).toHaveBeenCalledWith('saveChildren:', expect.any(Error));
+
+      silentErrorSpy.mockRestore();
+      localStorageMock.setItem.mockReset();
     });
 
     it('saves empty array when provided', () => {

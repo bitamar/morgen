@@ -6,6 +6,12 @@ vi.setSystemTime(mockDate);
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ChildView from '../Components/ChildView';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 describe('ChildView Bus Timing', () => {
   const mockChild = {
@@ -30,7 +36,13 @@ describe('ChildView Bus Timing', () => {
 
   it('shows correct bus countdown', () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     // At 7:00 AM, bus is at 7:45 AM, should show "Bus in 45m 0s"
@@ -42,7 +54,13 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T07:45:00'));
 
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.getByText('Bus time!')).toBeInTheDocument();
@@ -53,7 +71,13 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T08:16:00'));
 
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.getByText('Bus has left')).toBeInTheDocument();
@@ -66,11 +90,13 @@ describe('ChildView Bus Timing', () => {
     };
 
     render(
-      <ChildView
-        child={childWithoutBusTime}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithoutBusTime}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.queryByText(/Bus in/i)).not.toBeInTheDocument();
@@ -83,7 +109,13 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T06:00:00'));
 
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.getByText('Bus in 1h 45m')).toBeInTheDocument();
@@ -94,7 +126,13 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T07:44:30'));
 
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.getByText(/Bus in \d+s/)).toBeInTheDocument();
@@ -105,7 +143,13 @@ describe('ChildView Bus Timing', () => {
     vi.setSystemTime(new Date('2024-03-20T07:45:00'));
 
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     const busBadge = screen.getByText('Bus time!').closest('.flex');

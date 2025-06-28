@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Button, Text, Badge } from '@radix-ui/themes';
 import { Clock, Settings, CheckCircle2, Target } from 'lucide-react';
+import { useTranslation } from '../hooks/useTranslation';
 import TaskCard from './TaskCard';
 
 interface Task {
@@ -27,6 +28,7 @@ interface ChildViewProps {
 }
 
 export default function ChildView({ child, onUpdateChild, onEditMode }: ChildViewProps) {
+  const { t } = useTranslation();
   const [showCompletionCelebration, setShowCompletionCelebration] = useState(false);
   const [busCountdown, setBusCountdown] = useState('');
   const [pageCurrentTime, setPageCurrentTime] = useState(new Date());
@@ -66,19 +68,19 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
 
     const diff = busTimeToday.getTime() - pageCurrentTime.getTime();
 
-    if (diff <= -30 * 60_000) setBusCountdown('Bus has left');
-    else if (diff <= 0) setBusCountdown('Bus time!');
+    if (diff <= -30 * 60_000) setBusCountdown(t('busHasLeft'));
+    else if (diff <= 0) setBusCountdown(t('busTimeNow'));
     else {
       const totalSeconds = Math.floor(diff / 1_000);
       const s = totalSeconds % 60;
       const mm = Math.floor(totalSeconds / 60) % 60;
       const hh = Math.floor(totalSeconds / 3_600);
 
-      if (hh > 0) setBusCountdown(`Bus in ${hh}h ${mm}m`);
-      else if (mm > 0) setBusCountdown(`Bus in ${mm}m ${s}s`);
-      else setBusCountdown(`Bus in ${s}s`);
+      if (hh > 0) setBusCountdown(t('busInHours', { hours: hh, minutes: mm }));
+      else if (mm > 0) setBusCountdown(t('busInMinutes', { minutes: mm, seconds: s }));
+      else setBusCountdown(t('busInSeconds', { seconds: s }));
     }
-  }, [child.busTime, pageCurrentTime]);
+  }, [child.busTime, pageCurrentTime, t]);
 
   // --- task toggle handler ---------------------------------------------------
   const handleTaskToggle = (taskId: string) => {
@@ -92,10 +94,10 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
   const totalTasks = child.tasks?.length ?? 0;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  const displayTime = pageCurrentTime.toLocaleTimeString('en-US', {
+  const displayTime = pageCurrentTime.toLocaleTimeString(t('timeFormat'), {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
+    hour12: t('timeFormat') === 'en-US',
   });
 
   return (
@@ -119,7 +121,7 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                   </motion.div>
                   <div>
                     <Text size="6" weight="bold" className="text-gray-800">
-                      {`${child.name}'s Morning!`}
+                      {t('morningTitle', { name: child.name })}
                     </Text>
                     <div className="flex items-center gap-2 flex-wrap mt-2">
                       <Badge variant="outline" className="flex items-center gap-1">
@@ -130,8 +132,7 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                         <Badge
                           variant="outline"
                           className={`flex items-center gap-1 ${
-                            busCountdown.includes('Bus time!') ||
-                            busCountdown.includes('Bus has left')
+                            busCountdown === t('busTimeNow') || busCountdown === t('busHasLeft')
                               ? 'bg-red-100 text-red-700 border-red-300'
                               : ''
                           }`}
@@ -148,7 +149,7 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                   variant="ghost"
                   onClick={onEditMode}
                   className="text-gray-600 hover:text-gray-800"
-                  aria-label="Settings"
+                  aria-label={t('settings')}
                 >
                   <Settings className="w-5 h-5" />
                 </Button>
@@ -159,7 +160,7 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-2">
                     <Text size="2" className="text-gray-600">
-                      Progress: {completedTasks}/{totalTasks} tasks
+                      {t('progress', { completed: completedTasks, total: totalTasks })}
                     </Text>
                     <Text size="2" weight="bold" className="text-blue-600">
                       {Math.round(progressPercentage)}%
@@ -203,13 +204,13 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
             >
               <div className="text-6xl mb-4">📝</div>
               <Text size="5" weight="bold" className="text-gray-600 mb-2">
-                No tasks yet!
+                {t('noTasksYet')}
               </Text>
               <Text size="2" className="text-gray-500">
-                Tap the <Settings className="inline w-4 h-4" /> icon to add some morning tasks.
+                {t('tapSettingsToAddTasks')}
               </Text>
               <Button onClick={onEditMode} className="mt-4">
-                Add Tasks
+                {t('addTasks')}
               </Button>
             </motion.div>
           )}
@@ -235,10 +236,10 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
               >
                 <div className="text-8xl mb-4">🎉</div>
                 <Text size="6" weight="bold" className="text-green-600 mb-2">
-                  All Done, {child.name}!
+                  {t('allDone', { name: child.name })}
                 </Text>
                 <Text size="3" className="text-gray-600">
-                  {`Fantastic work! You're ready for an amazing day! 🚌`}
+                  {t('fantasticWork')}
                 </Text>
                 <motion.div
                   animate={{ y: [0, -10, 0] }}

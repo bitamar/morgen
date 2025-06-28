@@ -3,6 +3,12 @@ import { render, screen, act } from '@testing-library/react';
 
 import ChildView from '../Components/ChildView.tsx';
 import React, { PropsWithChildren } from 'react';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 // Silence Framer Motion’s enter/exit animations by mocking both `motion.div`
 // and `AnimatePresence` so they render instantly and remove instantly.
@@ -40,7 +46,11 @@ describe('ChildView animations', () => {
     const onUpdateChild = vi.fn();
     const onEditMode = vi.fn();
 
-    render(<ChildView child={child} onUpdateChild={onUpdateChild} onEditMode={onEditMode} />);
+    render(
+      <TestWrapper>
+        <ChildView child={child} onUpdateChild={onUpdateChild} onEditMode={onEditMode} />
+      </TestWrapper>
+    );
 
     expect(screen.getByText('All Done, Alice!')).toBeInTheDocument();
 

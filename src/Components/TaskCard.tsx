@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, Text, Flex, Box } from '@radix-ui/themes';
 import { Check } from 'lucide-react';
+import { useTranslation } from '../hooks/useTranslation';
 import { soundService } from '../services/SoundService';
 
 interface Task {
@@ -22,6 +23,7 @@ const celebrationSounds = ['🎉', '✨', '🌟', '🎊', '💫', '🎈'];
 // const celebrationAnimations = ['confetti', 'bounce', 'sparkle', 'flip', 'glow', 'pulse'];
 
 export default function TaskCard({ task, onToggle, disabled = false }: TaskCardProps) {
+  const { t } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(false);
   const [celebrationEmoji, setCelebrationEmoji] = useState('');
 
@@ -97,7 +99,7 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
                 </Text>
                 {task.done && (
                   <Text size="2" color="green" className="mt-1">
-                    Great job! ✨
+                    {t('greatJob')}
                   </Text>
                 )}
               </Box>

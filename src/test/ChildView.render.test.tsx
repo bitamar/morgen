@@ -6,6 +6,12 @@ vi.setSystemTime(mockDate);
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ChildView from '../Components/ChildView';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 describe('ChildView Rendering', () => {
   const mockChild = {
@@ -30,7 +36,13 @@ describe('ChildView Rendering', () => {
 
   it('renders child information correctly', () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.getByText("Test Child's Morning!")).toBeInTheDocument();
@@ -46,11 +58,13 @@ describe('ChildView Rendering', () => {
     };
 
     render(
-      <ChildView
-        child={childWithoutTasks}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithoutTasks}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.getByText('No tasks yet!')).toBeInTheDocument();

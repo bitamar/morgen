@@ -3,6 +3,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TaskCard from '../Components/TaskCard';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 // Silence Framer Motion's enter/exit animations by mocking both `motion.div` and `AnimatePresence` so they render instantly and remove instantly.
 vi.mock('framer-motion', () => {
@@ -41,7 +47,11 @@ describe('TaskCard', () => {
   });
 
   it('renders task information correctly', () => {
-    render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
+    render(
+      <TestWrapper>
+        <TaskCard task={mockTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     expect(screen.getByText('Brush teeth')).toBeInTheDocument();
     expect(screen.getByText('🦷')).toBeInTheDocument();
@@ -49,7 +59,11 @@ describe('TaskCard', () => {
 
   it('calls onToggle when clicked', async () => {
     vi.useRealTimers();
-    render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
+    render(
+      <TestWrapper>
+        <TaskCard task={mockTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     const card = screen.getByTestId('task-card');
     await userEvent.click(card);
@@ -59,7 +73,11 @@ describe('TaskCard', () => {
 
   it('shows completion state when task is done', () => {
     const completedTask = { ...mockTask, done: true };
-    render(<TaskCard task={completedTask} onToggle={mockOnToggle} />);
+    render(
+      <TestWrapper>
+        <TaskCard task={completedTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     expect(screen.getByText('Great job! ✨')).toBeInTheDocument();
     expect(screen.getByText('Brush teeth')).toHaveClass('line-through');
@@ -68,7 +86,11 @@ describe('TaskCard', () => {
   it('does not trigger celebration when marking task as incomplete', async () => {
     vi.useRealTimers();
     const completedTask = { ...mockTask, done: true };
-    const { rerender } = render(<TaskCard task={completedTask} onToggle={mockOnToggle} />);
+    const { rerender } = render(
+      <TestWrapper>
+        <TaskCard task={completedTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     const card = screen.getByTestId('task-card');
     await userEvent.click(card);
@@ -76,7 +98,11 @@ describe('TaskCard', () => {
     expect(mockOnToggle).toHaveBeenCalledWith('task1');
 
     // Simulate parent updating the task to incomplete
-    rerender(<TaskCard task={{ ...mockTask, done: false }} onToggle={mockOnToggle} />);
+    rerender(
+      <TestWrapper>
+        <TaskCard task={{ ...mockTask, done: false }} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     // No celebration emoji should be shown
     expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).not.toBeInTheDocument();
@@ -86,7 +112,11 @@ describe('TaskCard', () => {
 
   it('triggers celebration when marking task as complete', async () => {
     vi.useRealTimers();
-    render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
+    render(
+      <TestWrapper>
+        <TaskCard task={mockTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     const card = screen.getByTestId('task-card');
     await userEvent.click(card);
@@ -105,7 +135,11 @@ describe('TaskCard', () => {
 
   it('is disabled when disabled prop is true', async () => {
     vi.useRealTimers();
-    render(<TaskCard task={mockTask} onToggle={mockOnToggle} disabled={true} />);
+    render(
+      <TestWrapper>
+        <TaskCard task={mockTask} onToggle={mockOnToggle} disabled={true} />
+      </TestWrapper>
+    );
 
     const card = screen.getByTestId('task-card');
     expect(card).toHaveClass('opacity-50');
@@ -116,7 +150,11 @@ describe('TaskCard', () => {
   });
 
   it('shows different background colors for completed and incomplete tasks', () => {
-    const { rerender } = render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
+    const { rerender } = render(
+      <TestWrapper>
+        <TaskCard task={mockTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     // Incomplete task should have blue gradient
     const card = screen.getByTestId('task-card');
@@ -125,20 +163,32 @@ describe('TaskCard', () => {
 
     // Complete task should have green gradient
     const completedTask = { ...mockTask, done: true };
-    rerender(<TaskCard task={completedTask} onToggle={mockOnToggle} />);
+    rerender(
+      <TestWrapper>
+        <TaskCard task={completedTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
     expect(card).toHaveClass('from-green-100');
     expect(card).toHaveClass('to-emerald-100');
   });
 
   it('shows checkmark icon when task is completed', () => {
     const completedTask = { ...mockTask, done: true };
-    render(<TaskCard task={completedTask} onToggle={mockOnToggle} />);
+    render(
+      <TestWrapper>
+        <TaskCard task={completedTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     expect(screen.getByTestId('check-icon')).toBeInTheDocument();
   });
 
   it('shows empty circle when task is incomplete', () => {
-    render(<TaskCard task={mockTask} onToggle={mockOnToggle} />);
+    render(
+      <TestWrapper>
+        <TaskCard task={mockTask} onToggle={mockOnToggle} />
+      </TestWrapper>
+    );
 
     expect(screen.getByTestId('empty-circle')).toBeInTheDocument();
   });

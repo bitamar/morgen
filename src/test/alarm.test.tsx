@@ -1,23 +1,22 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useAlarm, AlarmContext } from '../context/alarm';
 import React from 'react';
 
 describe('alarm context', () => {
-  beforeEach(() => {
-    // Suppress console errors during error boundary tests
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it('throws error when useAlarm is used outside of AlarmProvider', () => {
+    const silentErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     // Render the hook outside of any provider
     expect(() => {
       renderHook(() => useAlarm());
     }).toThrow('useAlarm must be used within an AlarmProvider');
+
+    silentErrorSpy.mockRestore();
   });
 
   it('works correctly when used within AlarmProvider', () => {
@@ -28,9 +27,7 @@ describe('alarm context', () => {
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <AlarmContext.Provider value={mockContextValue}>
-        {children}
-      </AlarmContext.Provider>
+      <AlarmContext.Provider value={mockContextValue}>{children}</AlarmContext.Provider>
     );
 
     const { result } = renderHook(() => useAlarm(), { wrapper });
@@ -61,9 +58,7 @@ describe('alarm context', () => {
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <AlarmContext.Provider value={mockContextValue}>
-        {children}
-      </AlarmContext.Provider>
+      <AlarmContext.Provider value={mockContextValue}>{children}</AlarmContext.Provider>
     );
 
     const { result } = renderHook(() => useAlarm(), { wrapper });
@@ -72,4 +67,4 @@ describe('alarm context', () => {
     expect(result.current.currentAlarm?.type).toBe('wakeup');
     expect(result.current.currentAlarm?.child.name).toBe('Test Child');
   });
-}); 
+});

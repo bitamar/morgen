@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Card, Button, Text, Flex, Box } from '@radix-ui/themes';
 import { X, Plus, Trash2, GripVertical, User, Star } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface Task {
   id: string;
@@ -26,25 +27,22 @@ interface EditModeProps {
   onClose: () => void;
 }
 
-interface TaskPreset {
-  title: string;
-  emoji: string;
-}
-
 const AVATAR_OPTIONS = ['👦', '👧', '🧒', '👶', '🐱', '🐶', '🦄', '🌟', '🚀', '🎨'];
 
-const TASK_PRESETS: TaskPreset[] = [
-  { title: 'Brush teeth', emoji: '🦷' },
-  { title: 'Get dressed', emoji: '👕' },
-  { title: 'Eat breakfast', emoji: '🥣' },
-  { title: 'Pack backpack', emoji: '🎒' },
-  { title: 'Put on shoes', emoji: '👟' },
-  { title: 'Wash face', emoji: '🧼' },
-  { title: 'Comb hair', emoji: '💇' },
-  { title: 'Make bed', emoji: '🛏️' },
+// Task presets will be translated dynamically
+const TASK_PRESET_KEYS = [
+  { titleKey: 'brushTeeth', emoji: '🦷' },
+  { titleKey: 'getDressed', emoji: '👕' },
+  { titleKey: 'eatBreakfast', emoji: '🥣' },
+  { titleKey: 'packBackpack', emoji: '🎒' },
+  { titleKey: 'putOnShoes', emoji: '👟' },
+  { titleKey: 'washFace', emoji: '🧼' },
+  { titleKey: 'combHair', emoji: '💇' },
+  { titleKey: 'makeBed', emoji: '🛏️' },
 ];
 
 export default function EditMode({ child, onSave, onClose }: EditModeProps) {
+  const { t } = useTranslation();
   const [editedChild, setEditedChild] = useState<Child>({
     id: child.id,
     name: child.name || '',
@@ -67,25 +65,19 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
     setEditedChild(prev => ({ ...prev, tasks: items }));
   };
 
-  const addTask = (preset?: TaskPreset) => {
-    const title = preset?.title || newTaskTitle.trim();
-    const emoji = preset?.emoji || newTaskEmoji;
+  const addTask = (presetKey?: string) => {
+    const title = presetKey ? t(presetKey) : newTaskTitle.trim();
+    const emoji = presetKey
+      ? TASK_PRESET_KEYS.find(p => p.titleKey === presetKey)?.emoji
+      : newTaskEmoji;
 
     if (!title) return;
 
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      title,
-      emoji,
-      done: false,
-    };
+    const newTask: Task = { id: `task-${Date.now()}`, title, emoji: emoji || '✅', done: false };
 
-    setEditedChild(prev => ({
-      ...prev,
-      tasks: [...prev.tasks, newTask],
-    }));
+    setEditedChild(prev => ({ ...prev, tasks: [...prev.tasks, newTask] }));
 
-    if (!preset) {
+    if (!presetKey) {
       setNewTaskTitle('');
       setNewTaskEmoji('✅');
     }
@@ -106,7 +98,7 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
   };
 
   const handleSave = () => {
-    onSave(editedChild); // onSave now closes modal in parent
+    onSave(editedChild);
   };
 
   return (
@@ -125,7 +117,7 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
         <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <div className="flex items-center justify-between">
             <Text size="6" weight="bold">
-              Edit {`${editedChild.name}'s`} Routine
+              {t('editRoutine', { name: editedChild.name })}
             </Text>
             <Button
               variant="ghost"
@@ -146,26 +138,26 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                 <Flex direction="column" gap="4" p="4">
                   <Text size="5" weight="bold" className="flex items-center gap-2">
                     <User className="w-5 h-5" />
-                    Child Info
+                    {t('childInfo')}
                   </Text>
                   <Flex direction="column" gap="4">
                     <Box>
                       <Text as="label" size="2" weight="medium" mb="2">
-                        Name
+                        {t('name')}
                       </Text>
                       <input
                         value={editedChild.name}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                           setEditedChild(prev => ({ ...prev, name: e.target.value }))
                         }
-                        placeholder="Enter child's name"
+                        placeholder={t('enterChildName')}
                         className="w-full px-3 py-2 rounded-md border border-gray-300 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </Box>
 
                     <Box>
                       <Text as="label" size="2" weight="medium" mb="2">
-                        Avatar
+                        {t('avatar')}
                       </Text>
                       <div className="grid grid-cols-5 gap-1 sm:gap-2 mt-2">
                         {AVATAR_OPTIONS.map(emoji => (
@@ -174,14 +166,11 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setEditedChild(prev => ({ ...prev, avatar: emoji }))}
-                            className={`
-                                                            w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 text-xl sm:text-2xl flex items-center justify-center transition-all
-                                                            ${
-                                                              editedChild.avatar === emoji
-                                                                ? 'border-blue-500 bg-blue-50'
-                                                                : 'border-gray-200 hover:border-gray-300'
-                                                            }
-                                                        `}
+                            className={` w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 text-xl sm:text-2xl flex items-center justify-center transition-all ${
+                              editedChild.avatar === emoji
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
                           >
                             {emoji}
                           </motion.button>
@@ -192,7 +181,7 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                     <Flex gap="4">
                       <Box style={{ flex: 1 }}>
                         <Text as="label" size="2" weight="medium" mb="2">
-                          Wake-up Time
+                          {t('wakeUpTime')}
                         </Text>
                         <input
                           type="time"
@@ -205,7 +194,7 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                       </Box>
                       <Box style={{ flex: 1 }}>
                         <Text as="label" size="2" weight="medium" mb="2">
-                          Bus Time
+                          {t('busTime')}
                         </Text>
                         <input
                           type="time"
@@ -225,19 +214,19 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
               <Card>
                 <Flex direction="column" gap="4" p="4">
                   <Text size="5" weight="bold">
-                    Quick Add Tasks
+                    {t('quickAddTasks')}
                   </Text>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {TASK_PRESETS.map(preset => (
+                    {TASK_PRESET_KEYS.map(preset => (
                       <motion.button
-                        key={preset.title}
+                        key={preset.titleKey}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => addTask(preset)}
+                        onClick={() => addTask(preset.titleKey)}
                         className="flex items-center gap-2 p-2 sm:p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-left"
                       >
                         <span className="text-lg sm:text-xl">{preset.emoji}</span>
-                        <span className="text-xs sm:text-sm font-medium">{preset.title}</span>
+                        <span className="text-xs sm:text-sm font-medium">{t(preset.titleKey)}</span>
                       </motion.button>
                     ))}
                   </div>
@@ -251,7 +240,7 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                 <Flex direction="column" gap="4" p="4">
                   <Text size="5" weight="bold" className="flex items-center gap-2">
                     <Star className="w-5 h-5" />
-                    Morning Tasks ({editedChild.tasks.length})
+                    {t('morningTasks')} ({editedChild.tasks.length})
                   </Text>
                   <Flex direction="column" gap="4">
                     {/* Add New Task */}
@@ -271,7 +260,7 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                           onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setNewTaskTitle(e.target.value)
                           }
-                          placeholder="New task..."
+                          placeholder={t('newTaskPlaceholder')}
                           className="flex-1 px-3 py-2 rounded-md border border-gray-300 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                           onKeyPress={(e: KeyboardEvent<HTMLInputElement>) =>
                             e.key === 'Enter' && addTask()
@@ -349,9 +338,9 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
         <div className="p-4 sm:p-6 border-t bg-gray-50">
           <Flex justify="end" gap="3">
             <Button variant="soft" onClick={onClose}>
-              Cancel
+              {t('cancel')}
             </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button onClick={handleSave}>{t('saveChanges')}</Button>
           </Flex>
         </div>
       </motion.div>

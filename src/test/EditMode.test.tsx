@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EditMode from '../Components/EditMode';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 const mockChild = {
   id: 'test-child',
@@ -24,7 +30,11 @@ beforeEach(() => {
 
 describe('EditMode', () => {
   it('renders child information correctly', () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     expect(screen.getByDisplayValue('Test Child')).toBeInTheDocument();
     expect(screen.getByDisplayValue('07:00')).toBeInTheDocument();
@@ -34,7 +44,11 @@ describe('EditMode', () => {
   });
 
   it('calls onClose when cancel button is clicked', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const cancelButton = screen.getByText('Cancel');
     await userEvent.click(cancelButton);
@@ -43,7 +57,11 @@ describe('EditMode', () => {
   });
 
   it('calls onClose when X button is clicked', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     // Find the X button by its specific class/location in header
     const allButtons = screen.getAllByRole('button');
@@ -54,22 +72,32 @@ describe('EditMode', () => {
   });
 
   it('calls onSave when save button is clicked', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'test-child',
-      name: 'Test Child',
-      avatar: '👧',
-      wakeUpTime: '07:00',
-      busTime: '08:00',
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'test-child',
+        name: 'Test Child',
+        avatar: '👧',
+        wakeUpTime: '07:00',
+        busTime: '08:00',
+      })
+    );
   });
 
   it('updates child name when input changes', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const nameInput = screen.getByDisplayValue('Test Child');
     await userEvent.clear(nameInput);
@@ -78,13 +106,19 @@ describe('EditMode', () => {
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'New Name',
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'New Name',
+      })
+    );
   });
 
   it('updates wake up time when input changes', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const wakeUpInput = screen.getByDisplayValue('07:00');
     await userEvent.clear(wakeUpInput);
@@ -93,13 +127,19 @@ describe('EditMode', () => {
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      wakeUpTime: '06:30',
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        wakeUpTime: '06:30',
+      })
+    );
   });
 
   it('updates bus time when input changes', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const busTimeInput = screen.getByDisplayValue('08:00');
     await userEvent.clear(busTimeInput);
@@ -108,13 +148,19 @@ describe('EditMode', () => {
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      busTime: '08:30',
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        busTime: '08:30',
+      })
+    );
   });
 
   it('changes avatar when avatar button is clicked', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const newAvatarButton = screen.getByRole('button', { name: '👦' });
     await userEvent.click(newAvatarButton);
@@ -122,13 +168,19 @@ describe('EditMode', () => {
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      avatar: '👦',
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        avatar: '👦',
+      })
+    );
   });
 
   it('adds a new custom task when form is filled and submitted', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const emojiInput = screen.getByDisplayValue('✅');
     const titleInput = screen.getByPlaceholderText('New task...');
@@ -147,7 +199,11 @@ describe('EditMode', () => {
   });
 
   it('adds a preset task when preset button is clicked', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const presetButton = screen.getByRole('button', { name: '🦷 Brush teeth' });
     await userEvent.click(presetButton);
@@ -158,7 +214,11 @@ describe('EditMode', () => {
   });
 
   it('removes a task when delete button is clicked', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const deleteButtons = screen.getAllByRole('button').filter(button => {
       const svg = button.querySelector('svg');
@@ -166,7 +226,7 @@ describe('EditMode', () => {
     });
 
     expect(screen.getByDisplayValue('Brush teeth')).toBeInTheDocument();
-    
+
     // Click the first delete button
     await userEvent.click(deleteButtons[0]);
 
@@ -175,7 +235,11 @@ describe('EditMode', () => {
   });
 
   it('updates task title when input changes', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const taskInput = screen.getByDisplayValue('Brush teeth');
     await userEvent.clear(taskInput);
@@ -184,17 +248,23 @@ describe('EditMode', () => {
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      tasks: expect.arrayContaining([
-        expect.objectContaining({
-          title: 'Brush teeth thoroughly',
-        }),
-      ]),
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tasks: expect.arrayContaining([
+          expect.objectContaining({
+            title: 'Brush teeth thoroughly',
+          }),
+        ]),
+      })
+    );
   });
 
   it('updates task emoji when input changes', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const emojiInputs = screen.getAllByDisplayValue('🦷');
     await userEvent.clear(emojiInputs[0]);
@@ -203,17 +273,23 @@ describe('EditMode', () => {
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      tasks: expect.arrayContaining([
-        expect.objectContaining({
-          emoji: '🪥',
-        }),
-      ]),
-    }));
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tasks: expect.arrayContaining([
+          expect.objectContaining({
+            emoji: '🪥',
+          }),
+        ]),
+      })
+    );
   });
 
   it('adds task when Enter key is pressed in title input', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const titleInput = screen.getByPlaceholderText('New task...');
     await userEvent.type(titleInput, 'New task via Enter{enter}');
@@ -223,7 +299,11 @@ describe('EditMode', () => {
   });
 
   it('does not add empty task when add button is clicked', async () => {
-    render(<EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={mockChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     // Find the plus button specifically by looking for buttons with Plus icon
     const allButtons = screen.getAllByRole('button');
@@ -247,11 +327,15 @@ describe('EditMode', () => {
       tasks: [],
     };
 
-    render(<EditMode child={minimalChild} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <EditMode child={minimalChild} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     // Should render with default values
     expect(screen.getByText('👦')).toBeInTheDocument(); // Default avatar button
     expect(screen.getByDisplayValue('07:00')).toBeInTheDocument(); // Default wake time
     expect(screen.getByDisplayValue('08:00')).toBeInTheDocument(); // Default bus time
   });
-}); 
+});

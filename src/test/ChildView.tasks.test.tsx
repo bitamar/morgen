@@ -5,6 +5,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChildView from '../Components/ChildView';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 describe('ChildView Tasks', () => {
   const mockChild = {
@@ -34,7 +40,13 @@ describe('ChildView Tasks', () => {
 
   it('shows correct progress information', async () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
     expect(await screen.findByText('Progress: 0/2 tasks')).toBeInTheDocument();
     expect(await screen.findByText('0%')).toBeInTheDocument();
@@ -42,7 +54,13 @@ describe('ChildView Tasks', () => {
 
   it('updates progress when tasks are completed', async () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     const task = await screen.findByText('Brush teeth');
@@ -69,11 +87,13 @@ describe('ChildView Tasks', () => {
     };
 
     render(
-      <ChildView
-        child={childWithOneTask}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithOneTask}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     const task = await screen.findByText('Brush teeth');
@@ -97,11 +117,13 @@ describe('ChildView Tasks', () => {
     };
 
     render(
-      <ChildView
-        child={childWithCompletedTask}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithCompletedTask}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(await screen.findByText(/All Done/i)).toBeInTheDocument();
@@ -115,11 +137,13 @@ describe('ChildView Tasks', () => {
     };
 
     render(
-      <ChildView
-        child={childWithEmptyTasks}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithEmptyTasks}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(await screen.findByText('No tasks yet!')).toBeInTheDocument();
@@ -132,11 +156,13 @@ describe('ChildView Tasks', () => {
     };
 
     render(
-      <ChildView
-        child={childWithEmptyTasks}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithEmptyTasks}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     const addTasksBtn = await screen.findByRole('button', { name: /add tasks/i });
@@ -157,11 +183,13 @@ describe('ChildView Tasks', () => {
     };
 
     render(
-      <ChildView
-        child={childWithPartialCompletion}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithPartialCompletion}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(await screen.findByText('Progress: 1/2 tasks')).toBeInTheDocument();
@@ -175,11 +203,13 @@ describe('ChildView Tasks', () => {
     };
 
     render(
-      <ChildView
-        child={childWithoutTasks}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={childWithoutTasks}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     await waitFor(async () => {

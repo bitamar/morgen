@@ -2,11 +2,9 @@ import { describe, it, expect, vi, beforeEach, MockInstance } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
+import { LanguageProvider } from '../Components/LanguageProvider';
 
-vi.mock('../services/peopleStorage', () => ({
-  loadChildren: vi.fn(),
-  saveChildren: vi.fn(),
-}));
+vi.mock('../services/peopleStorage', () => ({ loadChildren: vi.fn(), saveChildren: vi.fn() }));
 
 vi.mock('framer-motion', () => {
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -22,6 +20,8 @@ vi.mock('framer-motion', () => {
           whileHover,
           whileTap,
           whileInView,
+          layout,
+          layoutId,
           ...htmlProps
         } = props;
         return <div {...htmlProps}>{children}</div>;
@@ -36,9 +36,27 @@ vi.mock('framer-motion', () => {
           whileHover,
           whileTap,
           whileInView,
+          layout,
+          layoutId,
           ...htmlProps
         } = props;
         return <button {...htmlProps}>{children}</button>;
+      },
+      span: ({ children, ...props }: { children: React.ReactNode; [_key: string]: unknown }) => {
+        // Remove framer-motion specific props but keep HTML attributes
+        const {
+          initial,
+          animate,
+          exit,
+          transition,
+          whileHover,
+          whileTap,
+          whileInView,
+          layout,
+          layoutId,
+          ...htmlProps
+        } = props;
+        return <span {...htmlProps}>{children}</span>;
       },
     },
     AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -69,6 +87,10 @@ const defaultChildren = [
   },
 ];
 
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(<LanguageProvider>{component}</LanguageProvider>);
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.setSystemTime(new Date('2024-03-20T07:00:00'));
@@ -80,7 +102,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     await waitFor(() => {
       expect(screen.getByText(/Maya/i)).toBeInTheDocument();
@@ -92,7 +114,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue([]);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     expect(screen.getByText('Loading Morning Routine...')).toBeInTheDocument();
     expect(screen.getByText('Setting up your day!')).toBeInTheDocument();
@@ -103,7 +125,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     // Verify initial child (Maya) is shown
     expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
@@ -120,7 +142,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     // Verify initial child (Maya) is shown
     expect(await screen.findByText(/Maya/i)).toBeInTheDocument();
@@ -137,7 +159,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
 
@@ -146,10 +168,14 @@ describe('MorningRoutine', () => {
 
     // Simulate swipe right (start at x=100, end at x=0 - swipe distance > 50)
     fireEvent.touchStart(container, {
-      targetTouches: [{ clientX: 100 }],
+      touches: [{ clientX: 100, clientY: 0 }],
+      targetTouches: [{ clientX: 100, clientY: 0 }],
+      changedTouches: [{ clientX: 100, clientY: 0 }],
     });
     fireEvent.touchMove(container, {
-      targetTouches: [{ clientX: 0 }],
+      touches: [{ clientX: 0, clientY: 0 }],
+      targetTouches: [{ clientX: 0, clientY: 0 }],
+      changedTouches: [{ clientX: 0, clientY: 0 }],
     });
     fireEvent.touchEnd(container);
 
@@ -161,7 +187,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
 
@@ -170,10 +196,14 @@ describe('MorningRoutine', () => {
 
     // Simulate small swipe (distance < 50)
     fireEvent.touchStart(container, {
-      targetTouches: [{ clientX: 25 }],
+      touches: [{ clientX: 25, clientY: 0 }],
+      targetTouches: [{ clientX: 25, clientY: 0 }],
+      changedTouches: [{ clientX: 25, clientY: 0 }],
     });
     fireEvent.touchMove(container, {
-      targetTouches: [{ clientX: 0 }],
+      touches: [{ clientX: 0, clientY: 0 }],
+      targetTouches: [{ clientX: 0, clientY: 0 }],
+      changedTouches: [{ clientX: 0, clientY: 0 }],
     });
     fireEvent.touchEnd(container);
 
@@ -185,7 +215,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue([defaultChildren[0]]);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     const container = document.querySelector('.min-h-screen.relative.overflow-hidden')!;
 
@@ -194,10 +224,14 @@ describe('MorningRoutine', () => {
 
     // Simulate swipe
     fireEvent.touchStart(container, {
-      targetTouches: [{ clientX: 100 }],
+      touches: [{ clientX: 100, clientY: 0 }],
+      targetTouches: [{ clientX: 100, clientY: 0 }],
+      changedTouches: [{ clientX: 100, clientY: 0 }],
     });
     fireEvent.touchMove(container, {
-      targetTouches: [{ clientX: 0 }],
+      touches: [{ clientX: 0, clientY: 0 }],
+      targetTouches: [{ clientX: 0, clientY: 0 }],
+      changedTouches: [{ clientX: 0, clientY: 0 }],
     });
     fireEvent.touchEnd(container);
 
@@ -209,7 +243,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     // Open child manager
     const usersButton = document.querySelector('.fixed.bottom-4.right-4 button')!;
@@ -219,10 +253,14 @@ describe('MorningRoutine', () => {
 
     // Try to swipe while child manager is open
     fireEvent.touchStart(container, {
-      targetTouches: [{ clientX: 100 }],
+      touches: [{ clientX: 100, clientY: 0 }],
+      targetTouches: [{ clientX: 100, clientY: 0 }],
+      changedTouches: [{ clientX: 100, clientY: 0 }],
     });
     fireEvent.touchMove(container, {
-      targetTouches: [{ clientX: 0 }],
+      touches: [{ clientX: 0, clientY: 0 }],
+      targetTouches: [{ clientX: 0, clientY: 0 }],
+      changedTouches: [{ clientX: 0, clientY: 0 }],
     });
     fireEvent.touchEnd(container);
 
@@ -234,7 +272,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue(defaultChildren);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     const settingsButton = screen.getByRole('button', { name: 'Settings' });
     await userEvent.click(settingsButton);
@@ -246,7 +284,7 @@ describe('MorningRoutine', () => {
   it('opens the child-manager modal when the users button is clicked', async () => {
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     const usersButton = document.querySelector('.fixed.bottom-4.right-4 button')!;
     await userEvent.click(usersButton);
@@ -258,7 +296,7 @@ describe('MorningRoutine', () => {
   it('calls saveChildren when a task is toggled', async () => {
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     const task = await screen.findByText(/Brush teeth/i);
     await userEvent.click(task);
@@ -274,7 +312,7 @@ describe('MorningRoutine', () => {
     (childrenService.loadChildren as unknown as MockInstance).mockReturnValue([defaultChildren[0]]);
     const MorningRoutine = (await import('../MorningRoutine')).default;
 
-    render(<MorningRoutine />);
+    renderWithProviders(<MorningRoutine />);
 
     // Navigation buttons and dots should not be visible
     expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument();

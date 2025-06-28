@@ -7,9 +7,12 @@ import AlarmOverlay from './Components/AlarmOverlay';
 import ChildView from './Components/ChildView';
 import EditMode from './Components/EditMode';
 import ChildManager from './Components/ChildManager';
+import { LanguageSelector } from './Components/LanguageSelector';
+import { useTranslation } from './hooks/useTranslation';
 import { type Child, loadChildren, saveChildren } from './services/peopleStorage.ts';
 
 export default function MorningRoutine() {
+  const { t } = useTranslation();
   const [children, setChildren] = useState<Child[]>(() => loadChildren());
   const [currentChildIndex, setCurrentChildIndex] = useState(0);
   const [editMode, setEditMode] = useState<Child | null>(null); // modal – single child
@@ -70,8 +73,8 @@ export default function MorningRoutine() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🌅</div>
-          <h1 className="text-2xl font-bold text-gray-700 mb-2">Loading Morning Routine...</h1>
-          <p className="text-gray-500">Setting up your day!</p>
+          <h1 className="text-2xl font-bold text-gray-700 mb-2">{t('loadingMorningRoutine')}</h1>
+          <p className="text-gray-500">{t('settingUpYourDay')}</p>
         </div>
       </div>
     );
@@ -94,7 +97,7 @@ export default function MorningRoutine() {
                 size="2"
                 onClick={prevChild}
                 className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg"
-                aria-label="Previous child"
+                aria-label={t('previousChild')}
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
@@ -116,7 +119,7 @@ export default function MorningRoutine() {
                 size="2"
                 onClick={nextChild}
                 className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg"
-                aria-label="Next child"
+                aria-label={t('nextChild')}
               >
                 <ChevronRight className="w-5 h-5" />
               </Button>
@@ -124,8 +127,9 @@ export default function MorningRoutine() {
           </div>
         )}
 
-        {/* -------- user / manager button -------- */}
-        <div className="fixed bottom-4 right-4 z-40">
+        {/* -------- user / manager buttons -------- */}
+        <div className="fixed bottom-4 right-4 z-40 flex flex-col gap-2">
+          <LanguageSelector />
           <Button
             variant="outline"
             size="2"

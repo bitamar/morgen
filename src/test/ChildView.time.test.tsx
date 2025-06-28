@@ -2,6 +2,12 @@ import { vi } from 'vitest';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import ChildView from '../Components/ChildView';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 const mockDate = new Date('2024-03-20T07:00:00');
 
@@ -31,7 +37,13 @@ describe('ChildView Time', () => {
 
   it('displays current time in correct format', () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     expect(screen.getByText('07:00 AM')).toBeInTheDocument();
@@ -39,7 +51,13 @@ describe('ChildView Time', () => {
 
   it('updates time display every second', async () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     // Advance time by 1 second
@@ -52,7 +70,13 @@ describe('ChildView Time', () => {
 
   it('cleans up timer on unmount', () => {
     const { unmount } = render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     const clearIntervalSpy = vi.spyOn(window, 'clearInterval');

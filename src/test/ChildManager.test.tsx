@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChildManager from '../Components/ChildManager';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 const mockChildren = [
   {
@@ -31,7 +37,11 @@ beforeEach(() => {
 
 describe('ChildManager', () => {
   it('renders children list correctly', () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     expect(screen.getByDisplayValue('Alice')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Bob')).toBeInTheDocument();
@@ -42,7 +52,11 @@ describe('ChildManager', () => {
   });
 
   it('renders title and buttons', () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     expect(screen.getByText('Manage Children')).toBeInTheDocument();
     expect(screen.getByText('Add Child')).toBeInTheDocument();
@@ -51,7 +65,11 @@ describe('ChildManager', () => {
   });
 
   it('calls onClose when cancel button is clicked', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const cancelButton = screen.getByText('Cancel');
     await userEvent.click(cancelButton);
@@ -60,7 +78,11 @@ describe('ChildManager', () => {
   });
 
   it('calls onClose when X button is clicked', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const closeButtons = screen.getAllByRole('button');
     const xButton = closeButtons.find(button => button.querySelector('.lucide-x'));
@@ -70,7 +92,11 @@ describe('ChildManager', () => {
   });
 
   it('calls onSave with edited children when save button is clicked', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const saveButton = screen.getByText('Save Changes');
     await userEvent.click(saveButton);
@@ -79,7 +105,11 @@ describe('ChildManager', () => {
   });
 
   it('adds a new child when add button is clicked', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const addButton = screen.getByText('Add Child');
     await userEvent.click(addButton);
@@ -97,7 +127,11 @@ describe('ChildManager', () => {
   });
 
   it('removes a child when delete button is clicked', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     // Initially should have 2 children
     expect(screen.getByDisplayValue('Alice')).toBeInTheDocument();
@@ -117,7 +151,11 @@ describe('ChildManager', () => {
   });
 
   it('updates child name when input changes', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const nameInput = screen.getByDisplayValue('Alice');
     await userEvent.clear(nameInput);
@@ -137,7 +175,11 @@ describe('ChildManager', () => {
   });
 
   it('updates child wake up time when input changes', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const wakeTimeInputs = screen.getAllByDisplayValue('07:00');
     await userEvent.clear(wakeTimeInputs[0]);
@@ -157,7 +199,11 @@ describe('ChildManager', () => {
   });
 
   it('updates child bus time when input changes', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const busTimeInput = screen.getByDisplayValue('08:00');
     await userEvent.clear(busTimeInput);
@@ -177,7 +223,11 @@ describe('ChildManager', () => {
   });
 
   it('handles empty children list', () => {
-    render(<ChildManager childList={[]} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={[]} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     expect(screen.getByText('Manage Children')).toBeInTheDocument();
     expect(screen.getByText('Add Child')).toBeInTheDocument();
@@ -188,7 +238,11 @@ describe('ChildManager', () => {
   });
 
   it('can add multiple children', async () => {
-    render(<ChildManager childList={[]} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={[]} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const addButton = screen.getByText('Add Child');
 
@@ -206,7 +260,11 @@ describe('ChildManager', () => {
   });
 
   it('preserves child tasks when updating other fields', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     // Update Alice's name
     const nameInput = screen.getByDisplayValue('Alice');
@@ -233,7 +291,11 @@ describe('ChildManager', () => {
     const mockDate = 1234567890;
     vi.spyOn(Date, 'now').mockReturnValue(mockDate);
 
-    render(<ChildManager childList={[]} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={[]} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const addButton = screen.getByText('Add Child');
     await userEvent.click(addButton);
@@ -254,7 +316,11 @@ describe('ChildManager', () => {
   });
 
   it('handles rapid add and remove operations', async () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const addButton = screen.getByText('Add Child');
 
@@ -275,7 +341,11 @@ describe('ChildManager', () => {
   });
 
   it('renders proper accessibility attributes', () => {
-    render(<ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />);
+    render(
+      <TestWrapper>
+        <ChildManager childList={mockChildren} onSave={mockOnSave} onClose={mockOnClose} />
+      </TestWrapper>
+    );
 
     const dialog = screen.getByRole('dialog');
     expect(dialog).toBeInTheDocument();

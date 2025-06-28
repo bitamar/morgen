@@ -7,6 +7,12 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ChildView from '../Components/ChildView';
+import { LanguageProvider } from '../Components/LanguageProvider';
+
+// Test wrapper component that provides the LanguageProvider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <LanguageProvider>{children}</LanguageProvider>
+);
 
 describe('ChildView Interactions', () => {
   const mockChild = {
@@ -31,7 +37,13 @@ describe('ChildView Interactions', () => {
 
   it('opens edit mode when settings button is clicked', async () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     await userEvent.click(screen.getByRole('button', { name: /settings/i }));
@@ -40,11 +52,13 @@ describe('ChildView Interactions', () => {
 
   it('opens edit mode when Add Tasks button is clicked', async () => {
     render(
-      <ChildView
-        child={{ ...mockChild, tasks: [] }}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={{ ...mockChild, tasks: [] }}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     await userEvent.click(screen.getByRole('button', { name: /Add Tasks/i }));
@@ -53,7 +67,13 @@ describe('ChildView Interactions', () => {
 
   it('marks a task as done when clicked', async () => {
     render(
-      <ChildView child={mockChild} onUpdateChild={mockOnUpdateChild} onEditMode={mockOnEditMode} />
+      <TestWrapper>
+        <ChildView
+          child={mockChild}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     await userEvent.click(screen.getByText('Brush teeth'));
@@ -68,17 +88,19 @@ describe('ChildView Interactions', () => {
 
   it('marks a completed task as not done when clicked', async () => {
     render(
-      <ChildView
-        child={{
-          ...mockChild,
-          tasks: [
-            { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
-            { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
-          ],
-        }}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={{
+            ...mockChild,
+            tasks: [
+              { id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true },
+              { id: 'task2', title: 'Get dressed', emoji: '👕', done: false },
+            ],
+          }}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     await userEvent.click(screen.getByText('Brush teeth'));
@@ -93,14 +115,16 @@ describe('ChildView Interactions', () => {
 
   it('dismisses completion celebration when clicked', async () => {
     render(
-      <ChildView
-        child={{
-          ...mockChild,
-          tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }],
-        }}
-        onUpdateChild={mockOnUpdateChild}
-        onEditMode={mockOnEditMode}
-      />
+      <TestWrapper>
+        <ChildView
+          child={{
+            ...mockChild,
+            tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: true }],
+          }}
+          onUpdateChild={mockOnUpdateChild}
+          onEditMode={mockOnEditMode}
+        />
+      </TestWrapper>
     );
 
     // Click the celebration overlay
