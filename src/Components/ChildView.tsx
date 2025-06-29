@@ -115,9 +115,13 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                 <div className="flex items-center gap-4">
                   <motion.div
                     whileHover={{ scale: 1.1 }}
-                    className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-3xl font-bold text-white shadow-lg"
+                    className="w-16 h-16 flex items-center justify-center shadow-lg"
                   >
-                    {child.avatar || child.name?.[0]?.toUpperCase() || '?'}
+                    <img
+                      src={`./folks/${child.avatar}`}
+                      alt={child.avatar.replace('.png', '')}
+                      className="max-w-full max-h-full object-contain"
+                    />
                   </motion.div>
                   <div>
                     <Text size="6" weight="bold" className="text-gray-800">
@@ -202,7 +206,13 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <div className="text-6xl mb-4">📝</div>
+              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <img
+                  src={'./things/star.png'}
+                  alt="star"
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <Text size="5" weight="bold" className="text-gray-600 mb-2">
                 {t('noTasksYet')}
               </Text>
@@ -234,7 +244,13 @@ export default function ChildView({ child, onUpdateChild, onEditMode }: ChildVie
                 transition={{ repeat: Infinity, duration: 1.5 }}
                 className="bg-white rounded-3xl p-8 text-center shadow-2xl max-w-sm mx-4"
               >
-                <div className="text-8xl mb-4">🎉</div>
+                <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                  <img
+                    src={'./things/star.png'}
+                    alt="celebration"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 <Text size="6" weight="bold" className="text-green-600 mb-2">
                   {t('allDone', { name: child.name })}
                 </Text>

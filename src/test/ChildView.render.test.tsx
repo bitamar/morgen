@@ -17,7 +17,7 @@ describe('ChildView Rendering', () => {
   const mockChild = {
     id: 'test-child',
     name: 'Test Child',
-    avatar: '👶',
+    avatar: 'bird.png',
     wakeUpTime: '07:00',
     busTime: '07:45',
     tasks: [
@@ -48,7 +48,7 @@ describe('ChildView Rendering', () => {
     expect(screen.getByText("Test Child's Morning!")).toBeInTheDocument();
     expect(screen.getByText('Brush teeth')).toBeInTheDocument();
     expect(screen.getByText('Get dressed')).toBeInTheDocument();
-    expect(screen.getByText('👶')).toBeInTheDocument();
+    expect(screen.getByAltText('bird')).toBeInTheDocument();
   });
 
   it('shows empty state when no tasks are present', () => {

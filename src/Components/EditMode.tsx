@@ -27,17 +27,25 @@ interface EditModeProps {
   onClose: () => void;
 }
 
-const AVATAR_OPTIONS = ['👦', '👧', '🧒', '👶', '🐱', '🐶', '🦄', '🌟', '🚀', '🎨'];
+const AVATAR_OPTIONS = [
+  'bird.png',
+  'cat.png',
+  'dog.png',
+  'fish.png',
+  'owl.png',
+  'rabbit.png',
+  'racoon.png',
+];
 
 // Task presets will be translated dynamically
 const TASK_PRESET_KEYS = [
-  { titleKey: 'brushTeeth', emoji: '🦷' },
-  { titleKey: 'getDressed', emoji: '👕' },
-  { titleKey: 'eatBreakfast', emoji: '🥣' },
-  { titleKey: 'packBackpack', emoji: '🎒' },
-  { titleKey: 'putOnShoes', emoji: '👟' },
+  { titleKey: 'brushTeeth', emoji: 'toothbrush.png' },
+  { titleKey: 'getDressed', emoji: 'shirt.png' },
+  { titleKey: 'eatBreakfast', emoji: 'sandwich.png' },
+  { titleKey: 'packBackpack', emoji: 'backpack.png' },
+  { titleKey: 'putOnShoes', emoji: 'shoe.png' },
   { titleKey: 'washFace', emoji: '🧼' },
-  { titleKey: 'combHair', emoji: '💇' },
+  { titleKey: 'combHair', emoji: 'brush.png' },
   { titleKey: 'makeBed', emoji: '🛏️' },
 ];
 
@@ -46,14 +54,14 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
   const [editedChild, setEditedChild] = useState<Child>({
     id: child.id,
     name: child.name || '',
-    avatar: child.avatar || '👦',
+    avatar: child.avatar || 'dog.png',
     wakeUpTime: child.wakeUpTime || '07:00',
     busTime: child.busTime || '08:00',
     tasks: child.tasks || [],
   });
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskEmoji, setNewTaskEmoji] = useState('✅');
+  const [newTaskEmoji, setNewTaskEmoji] = useState('star.png');
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -73,13 +81,18 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
 
     if (!title) return;
 
-    const newTask: Task = { id: `task-${Date.now()}`, title, emoji: emoji || '✅', done: false };
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      title,
+      emoji: emoji || 'star.png',
+      done: false,
+    };
 
     setEditedChild(prev => ({ ...prev, tasks: [...prev.tasks, newTask] }));
 
     if (!presetKey) {
       setNewTaskTitle('');
-      setNewTaskEmoji('✅');
+      setNewTaskEmoji('star.png');
     }
   };
 
@@ -160,19 +173,23 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                         {t('avatar')}
                       </Text>
                       <div className="grid grid-cols-5 gap-1 sm:gap-2 mt-2">
-                        {AVATAR_OPTIONS.map(emoji => (
+                        {AVATAR_OPTIONS.map(imageName => (
                           <motion.button
-                            key={emoji}
+                            key={imageName}
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setEditedChild(prev => ({ ...prev, avatar: emoji }))}
-                            className={` w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 text-xl sm:text-2xl flex items-center justify-center transition-all ${
-                              editedChild.avatar === emoji
+                            onClick={() => setEditedChild(prev => ({ ...prev, avatar: imageName }))}
+                            className={` w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 flex items-center justify-center transition-all overflow-hidden ${
+                              editedChild.avatar === imageName
                                 ? 'border-blue-500 bg-blue-50'
                                 : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
-                            {emoji}
+                            <img
+                              src={`./folks/${imageName}`}
+                              alt={imageName.replace('.png', '')}
+                              className="w-full h-full object-contain rounded"
+                            />
                           </motion.button>
                         ))}
                       </div>
@@ -225,7 +242,15 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                         onClick={() => addTask(preset.titleKey)}
                         className="flex items-center gap-2 p-2 sm:p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-left"
                       >
-                        <span className="text-lg sm:text-xl">{preset.emoji}</span>
+                        {preset.emoji.endsWith('.png') ? (
+                          <img
+                            src={`./things/${preset.emoji}`}
+                            alt={preset.titleKey}
+                            className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                          />
+                        ) : (
+                          <span className="text-lg sm:text-xl">{preset.emoji}</span>
+                        )}
                         <span className="text-xs sm:text-sm font-medium">{t(preset.titleKey)}</span>
                       </motion.button>
                     ))}
@@ -251,9 +276,9 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                           onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setNewTaskEmoji(e.target.value)
                           }
-                          placeholder="📝"
+                          placeholder="star.png"
                           className="w-16 px-3 py-2 rounded-md border border-gray-300 text-center text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          maxLength={2}
+                          maxLength={20}
                         />
                         <input
                           value={newTaskTitle}
@@ -308,8 +333,8 @@ export default function EditMode({ child, onSave, onClose }: EditModeProps) {
                                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                         updateTask(task.id, 'emoji', e.target.value)
                                       }
-                                      className="w-16 px-3 py-2 rounded-md border border-gray-300 text-center text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      maxLength={2}
+                                      className="w-20 px-3 py-2 rounded-md border border-gray-300 text-center text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      maxLength={20}
                                     />
                                     <Button
                                       variant="ghost"

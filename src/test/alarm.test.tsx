@@ -44,7 +44,7 @@ describe('alarm context', () => {
       child: {
         id: 'test-child',
         name: 'Test Child',
-        avatar: '👧',
+        avatar: 'cat.png',
         wakeUpTime: '07:00',
         busTime: '08:00',
         tasks: [],

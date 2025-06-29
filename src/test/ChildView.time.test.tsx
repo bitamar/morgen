@@ -15,7 +15,7 @@ describe('ChildView Time', () => {
   const mockChild = {
     id: 'test-child',
     name: 'Test Child',
-    avatar: '👶',
+    avatar: 'bird.png',
     wakeUpTime: '07:00',
     busTime: '07:45',
     tasks: [],

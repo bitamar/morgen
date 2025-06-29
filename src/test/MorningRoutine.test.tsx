@@ -69,7 +69,7 @@ const defaultChildren = [
   {
     id: 'maya',
     name: 'Maya',
-    avatar: '👧',
+    avatar: 'cat.png',
     wakeUpTime: '07:00',
     busTime: '07:45',
     tasks: [
@@ -80,7 +80,7 @@ const defaultChildren = [
   {
     id: 'alex',
     name: 'Alex',
-    avatar: '👦',
+    avatar: 'dog.png',
     wakeUpTime: '07:15',
     busTime: '08:00',
     tasks: [{ id: 'wash', title: 'Wash face', emoji: '🧼', done: false }],

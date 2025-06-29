@@ -13,7 +13,7 @@ const mockChildren = [
   {
     id: 'child1',
     name: 'Alice',
-    avatar: '👧',
+    avatar: 'cat.png',
     wakeUpTime: '07:00',
     busTime: '08:00',
     tasks: [{ id: 'task1', title: 'Brush teeth', emoji: '🦷', done: false }],
@@ -21,7 +21,7 @@ const mockChildren = [
   {
     id: 'child2',
     name: 'Bob',
-    avatar: '👦',
+    avatar: 'dog.png',
     wakeUpTime: '07:30',
     busTime: '08:30',
     tasks: [],
@@ -307,7 +307,7 @@ describe('ChildManager', () => {
       expect.objectContaining({
         id: `child-${mockDate}`,
         name: '',
-        avatar: '👦',
+        avatar: 'dog.png',
         wakeUpTime: '07:00',
         busTime: '08:00',
         tasks: [],

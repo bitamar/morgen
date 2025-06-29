@@ -38,27 +38,27 @@ describe('peopleStorage', () => {
       expect(children[0]).toEqual({
         id: 'maya',
         name: 'Maya',
-        avatar: '👧',
+        avatar: 'cat.png',
         wakeUpTime: '07:00',
         busTime: '07:45',
         tasks: [
-          { id: 'brush', title: 'Brush teeth', emoji: '🦷', done: false },
-          { id: 'dress', title: 'Get dressed', emoji: '👕', done: false },
-          { id: 'breakfast', title: 'Eat breakfast', emoji: '🥣', done: false },
-          { id: 'backpack', title: 'Pack backpack', emoji: '🎒', done: false },
+          { id: 'brush', title: 'Brush teeth', emoji: 'toothbrush.png', done: false },
+          { id: 'dress', title: 'Get dressed', emoji: 'shirt.png', done: false },
+          { id: 'breakfast', title: 'Eat breakfast', emoji: 'sandwich.png', done: false },
+          { id: 'backpack', title: 'Pack backpack', emoji: 'backpack.png', done: false },
         ],
       });
       expect(children[1]).toEqual({
         id: 'alex',
         name: 'Alex',
-        avatar: '👦',
+        avatar: 'dog.png',
         wakeUpTime: '07:15',
         busTime: '08:00',
         tasks: [
           { id: 'wash', title: 'Wash face', emoji: '🧼', done: false },
-          { id: 'dress2', title: 'Get dressed', emoji: '👕', done: false },
-          { id: 'breakfast2', title: 'Eat breakfast', emoji: '🥞', done: false },
-          { id: 'shoes', title: 'Put on shoes', emoji: '👟', done: false },
+          { id: 'dress2', title: 'Get dressed', emoji: 'shirt.png', done: false },
+          { id: 'breakfast2', title: 'Eat breakfast', emoji: 'sandwich.png', done: false },
+          { id: 'shoes', title: 'Put on shoes', emoji: 'shoe.png', done: false },
         ],
       });
     });
@@ -88,7 +88,7 @@ describe('peopleStorage', () => {
           {
             id: 'test-child',
             name: 'Test Child',
-            avatar: '🧒',
+            avatar: 'owl.png',
             wakeUpTime: '06:30',
             busTime: '07:30',
             tasks: [{ id: 'task1', title: 'Test task', emoji: '✅', done: true }],
@@ -168,7 +168,7 @@ describe('peopleStorage', () => {
         {
           id: 'test-child',
           name: 'Test Child',
-          avatar: '🧒',
+          avatar: 'owl.png',
           wakeUpTime: '06:30',
           busTime: '07:30',
           tasks: [{ id: 'task1', title: 'Test task', emoji: '✅', done: true }],

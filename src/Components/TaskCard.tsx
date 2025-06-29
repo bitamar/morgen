@@ -18,7 +18,7 @@ interface TaskCardProps {
   disabled?: boolean;
 }
 
-const celebrationSounds = ['🎉', '✨', '🌟', '🎊', '💫', '🎈'];
+const celebrationSounds = ['star.png', 'star.png', 'star.png', 'star.png', 'star.png', 'star.png'];
 
 // const celebrationAnimations = ['confetti', 'bounce', 'sparkle', 'flip', 'glow', 'pulse'];
 
@@ -83,9 +83,19 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
           <Flex p="6" align="center" justify="between" className="relative z-10">
             <Flex gap="4" align="center">
               {task.emoji && (
-                <Text size="6" className="text-4xl">
-                  {task.emoji}
-                </Text>
+                <div className="text-4xl w-12 h-12 flex items-center justify-center">
+                  {task.emoji.endsWith('.png') ? (
+                    <img
+                      src={`./things/${task.emoji}`}
+                      alt={task.title}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <Text size="6" className="text-4xl">
+                      {task.emoji}
+                    </Text>
+                  )}
+                </div>
               )}
               <Box>
                 <Text
@@ -149,9 +159,17 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
                 scale: [1, 1.5, 1],
               }}
               transition={{ duration: 0.8 }}
-              className="text-6xl"
+              className="text-6xl w-16 h-16 flex items-center justify-center"
             >
-              {celebrationEmoji}
+              {celebrationEmoji.endsWith('.png') ? (
+                <img
+                  src={`./things/${celebrationEmoji}`}
+                  alt="celebration"
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <span className="text-6xl">{celebrationEmoji}</span>
+              )}
             </motion.div>
 
             {/* Confetti Effect */}
@@ -166,9 +184,13 @@ export default function TaskCard({ task, onToggle, disabled = false }: TaskCardP
                   y: [(Math.random() - 0.5) * 200],
                 }}
                 transition={{ duration: 1, delay: i * 0.1 }}
-                className="absolute text-2xl"
+                className="absolute w-6 h-6 flex items-center justify-center"
               >
-                ⭐
+                <img
+                  src={'./things/star.png'}
+                  alt="star"
+                  className="w-full h-full object-contain"
+                />
               </motion.div>
             ))}
           </motion.div>

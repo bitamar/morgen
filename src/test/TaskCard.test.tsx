@@ -104,8 +104,8 @@ describe('TaskCard', () => {
       </TestWrapper>
     );
 
-    // No celebration emoji should be shown
-    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).not.toBeInTheDocument();
+    // No celebration image should be shown
+    expect(screen.queryByAltText('celebration')).not.toBeInTheDocument();
     // "Great job!" text should be removed
     expect(screen.queryByText('Great job! ✨')).not.toBeInTheDocument();
   });
@@ -121,8 +121,8 @@ describe('TaskCard', () => {
     const card = screen.getByTestId('task-card');
     await userEvent.click(card);
 
-    // Celebration emoji should be shown (any one from the array)
-    expect(screen.getByText(/[🎉✨🌟🎊💫🎈]/u)).toBeInTheDocument();
+    // Celebration image should be shown
+    expect(screen.getByAltText('celebration')).toBeInTheDocument();
 
     // Wait for the celebration to be removed
     await act(async () => {
@@ -130,7 +130,7 @@ describe('TaskCard', () => {
     });
 
     // Celebration should be removed after timeout
-    expect(screen.queryByText(/[🎉✨🌟🎊💫🎈]/u)).not.toBeInTheDocument();
+    expect(screen.queryByAltText('celebration')).not.toBeInTheDocument();
   }, 3000);
 
   it('is disabled when disabled prop is true', async () => {

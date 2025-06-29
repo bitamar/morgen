@@ -12,7 +12,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 const mockChild = {
   id: 'test-child',
   name: 'Test Child',
-  avatar: '👧',
+  avatar: 'cat.png',
   wakeUpTime: '07:00',
   busTime: '08:00',
   tasks: [
@@ -85,7 +85,7 @@ describe('EditMode', () => {
       expect.objectContaining({
         id: 'test-child',
         name: 'Test Child',
-        avatar: '👧',
+        avatar: 'cat.png',
         wakeUpTime: '07:00',
         busTime: '08:00',
       })
@@ -162,7 +162,7 @@ describe('EditMode', () => {
       </TestWrapper>
     );
 
-    const newAvatarButton = screen.getByRole('button', { name: '👦' });
+    const newAvatarButton = screen.getByAltText('dog');
     await userEvent.click(newAvatarButton);
 
     const saveButton = screen.getByText('Save Changes');
@@ -170,7 +170,7 @@ describe('EditMode', () => {
 
     expect(mockOnSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        avatar: '👦',
+        avatar: 'dog.png',
       })
     );
   });
@@ -182,7 +182,7 @@ describe('EditMode', () => {
       </TestWrapper>
     );
 
-    const emojiInput = screen.getByDisplayValue('✅');
+    const emojiInput = screen.getByDisplayValue('star.png');
     const titleInput = screen.getByPlaceholderText('New task...');
     // Find the plus button specifically by looking for buttons with Plus icon
     const allButtons = screen.getAllByRole('button');
@@ -205,7 +205,7 @@ describe('EditMode', () => {
       </TestWrapper>
     );
 
-    const presetButton = screen.getByRole('button', { name: '🦷 Brush teeth' });
+    const presetButton = screen.getByRole('button', { name: 'brushTeeth Brush teeth' });
     await userEvent.click(presetButton);
 
     // Should add another "Brush teeth" task
@@ -334,7 +334,7 @@ describe('EditMode', () => {
     );
 
     // Should render with default values
-    expect(screen.getByText('👦')).toBeInTheDocument(); // Default avatar button
+    expect(screen.getByAltText('dog')).toBeInTheDocument(); // Default avatar button
     expect(screen.getByDisplayValue('07:00')).toBeInTheDocument(); // Default wake time
     expect(screen.getByDisplayValue('08:00')).toBeInTheDocument(); // Default bus time
   });

@@ -32,7 +32,7 @@ export default function ChildManager({ childList, onSave, onClose }: ChildManage
     const newChild: Child = {
       id: `child-${Date.now()}`,
       name: '',
-      avatar: '👦',
+      avatar: 'dog.png',
       wakeUpTime: '07:00',
       busTime: '08:00',
       tasks: [],
